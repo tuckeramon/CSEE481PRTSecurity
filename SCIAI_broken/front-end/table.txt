@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS cart_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    cart_id VARCHAR(50) NOT NULL,
+    position ENUM(
+        'Station_1', 'Station_2', 'Station_3', 'Station_4',
+        'Segment_A', 'Segment_B', 'Segment_C', 'Segment_D',
+        'Segment_E', 'Segment_F'
+    ) NOT NULL,
+    event_type VARCHAR(50),
+    time_stamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

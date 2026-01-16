@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.pyc
+
+#Virtual Environment
+venv/
+
+# Config
+.env 
+config/config.json
+
