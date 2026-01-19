@@ -1,0 +1,36 @@
+# Python cache files - don't commit compiled bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Environment and configuration files with passwords
+.env
+*.env
+
+# Temporary MySQL password reset file
+mysql-init.txt
+
+# Data logs - these are generated at runtime
+SCIAI_broken/datalogs/*.csv
+
+# Windows reserved device names
+nul
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
