@@ -1,0 +1,63 @@
+
+networks:
+  simulation_lan:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
+
+services:
+  # Updated OpenPLC image
+  plc_primary:
+    image: fdamador/openplc
+    container_name: ab_plc_51
+    networks:
+      simulation_lan:
+        ipv4_address: 192.168.1.51
+    ports:
+      - "44818:44818" # EtherNet/IP
+      - "502:502"     # Modbus
+      - "8080:8080"   # Web Dashboard
+
+  # PanelView 5310 HMI simulation
+  panelview-hmi:
+    image: scadalts/scadalts:latest
+    container_name: ab_hmi_70
+    networks:
+      simulation_lan:
+        ipv4_address: 192.168.1.70
+    mac_address: 08:61:95:E5:A9:F9 
+
+  # MySQL Management Server
+  db_server:
+    image: mysql:8.0.42
+    container_name: mgt_db_30
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    networks:
+      simulation_lan:
+        ipv4_address: 192.168.1.30
+
+  # Schneider Electric Switch
+  switch_mgmt:
+    image: alpine:latest
+    container_name: schneider_switch_200
+    command: /bin/sh -c "apk add --no-cache dropbear lighttpd && dropbear -F -p 22"
+    networks:
+      simulation_lan:
+        ipv4_address: 192.168.1.200
+
+  # --- RED TEAM AGENT ---
+  kali-agent:
+    image: kalilinux/kali-rolling
+    container_name: red_team_beachhead
+    tty: true
+    stdin_open: true
+    networks:
+      simulation_lan:
+        ipv4_address: 192.168.1.10
+    command: >
+      sh -c "apt-get update && 
+             apt-get install -y nmap metasploit-framework python3-pip netcat-traditional && 
+             tail -f /dev/null"
+    restart: unless-stopped
