@@ -20,9 +20,9 @@ WATCHDOG_INTERVAL = 2
 # PRT PLC
 prt = None
 
-# MAJOR CHANGE: Database configuration now points to unified 'prt_system' database
+# MAJOR CHANGE: Database configuration now points to unified 'prt_unified' database
 # OLD: 'database': 'prtdb' - Backend had separate database from frontend
-# NEW: 'database': 'prt_system' - Single unified database shared with frontend
+# NEW: 'database': 'prt_unified' - NEW database that doesn't affect existing databases
 #
 # Benefits of unified database:
 # 1. Simpler architecture - only one database to manage
@@ -37,7 +37,7 @@ config = {
     'host': 'localhost',
     'user': 'root',
     'password': 'root',
-    'database': 'prt_system'  # CHANGED from 'prtdb' - now uses unified database
+    'database': 'prt_unified'  # NEW database - won't affect existing prtdb or prt_system
 }
 prtdb = PRTDB(config)
 server = None
