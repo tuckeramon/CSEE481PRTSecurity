@@ -12,6 +12,10 @@ __pycache__/
 # Temporary MySQL password reset file
 mysql-init.txt
 
+# Test files with database credentials
+SCIAI_broken/test_root_password.py
+SCIAI_broken/test_mysql_connection.py
+
 # Data logs - these are generated at runtime
 SCIAI_broken/datalogs/*.csv
 

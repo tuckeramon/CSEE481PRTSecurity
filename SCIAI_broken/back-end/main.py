@@ -19,11 +19,25 @@ WATCHDOG_INTERVAL = 2
 
 # PRT PLC
 prt = None
+
+# MAJOR CHANGE: Database configuration now points to unified 'prt_system' database
+# OLD: 'database': 'prtdb' - Backend had separate database from frontend
+# NEW: 'database': 'prt_system' - Single unified database shared with frontend
+#
+# Benefits of unified database:
+# 1. Simpler architecture - only one database to manage
+# 2. Data consistency - no synchronization issues between databases
+# 3. Direct cart_logs population - PRTDB now writes activity logs automatically
+# 4. Eliminated HTTP logging layer - no more log_server.py or WebRequester classes
+#
+# Database contains both:
+# - PRT tables (PRTSorterRequest, PRTSorterResponse, PRTSorterReport, PRTCarts, PRTRemoveCart)
+# - Frontend tables (users, cart_logs)
 config = {
     'host': 'localhost',
     'user': 'root',
     'password': 'root',
-    'database': 'prtdb'
+    'database': 'prt_system'  # CHANGED from 'prtdb' - now uses unified database
 }
 prtdb = PRTDB(config)
 server = None
