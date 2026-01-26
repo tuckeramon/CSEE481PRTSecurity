@@ -5,6 +5,9 @@ networks:
     ipam:
       config:
         - subnet: 192.168.1.0/24
+    # dns:
+    #   - 8.8.8.8
+    #   - 1.1.1.1
 
 services:
   # Updated OpenPLC image
@@ -14,21 +17,25 @@ services:
     networks:
       simulation_lan:
         ipv4_address: 192.168.1.51
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     ports:
       - "44818:44818" # EtherNet/IP
       - "502:502"     # Modbus
       - "8080:8080"   # Web Dashboard
-
-  # PanelView 5310 HMI simulation
+# PanelView 5310 HMI simulation
   panelview-hmi:
     image: scadalts/scadalts:latest
     container_name: ab_hmi_70
     networks:
       simulation_lan:
         ipv4_address: 192.168.1.70
-    mac_address: 08:61:95:E5:A9:F9 
-
-  # MySQL Management Server
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    mac_address: 08:61:95:E5:A9:F9
+# MySQL Management Server
   db_server:
     image: mysql:8.0.42
     container_name: mgt_db_30
@@ -37,8 +44,10 @@ services:
     networks:
       simulation_lan:
         ipv4_address: 192.168.1.30
-
-  # Schneider Electric Switch
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+# Schneider Electric Switch
   switch_mgmt:
     image: alpine:latest
     container_name: schneider_switch_200
@@ -46,7 +55,9 @@ services:
     networks:
       simulation_lan:
         ipv4_address: 192.168.1.200
-
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
   # --- RED TEAM AGENT ---
   kali-agent:
     image: kalilinux/kali-rolling
@@ -56,8 +67,31 @@ services:
     networks:
       simulation_lan:
         ipv4_address: 192.168.1.10
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     command: >
-      sh -c "apt-get update && 
-             apt-get install -y nmap metasploit-framework python3-pip netcat-traditional && 
-             tail -f /dev/null"
+      sh -c "apt-get update && apt-get install -y curl wget netcat-openbsd nmap && tail -f /dev/null" 
     restart: unless-stopped
+
+  # --- BLUE TEAM CONTAINER ---
+  siem-agent:
+    image: ubuntu:22.04
+    container_name: blue_team_siem
+    tty: true
+    stdin_open: true
+    networks:
+      simulation_lan:
+        ipv4_address: 192.168.1.20
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+    command: >
+      sh -c "apt-get update && apt-get install -y python3 python3-pip tcpdump wireshark-common nmap suricata && pip3 install scapy && tail -f /dev/null"
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
