@@ -1,0 +1,867 @@
+|>nmap -p- -sS -A 192.168.1.0/24
+Starting Nmap 7.80 ( https://nmap.org ) at 2025-12-01 12:28 Eastern Standard Time
+Nmap scan report for 192.168.1.2
+Host is up (0.0028s latency).
+Not shown: 65533 closed ports
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     Dropbear sshd 2012.55 (protocol 2.0)
+| ssh-hostkey:
+|   1024 b2:6f:b5:d0:57:01:f9:bd:60:05:6e:3f:e5:8c:c8:af (DSA)
+|_  1039 9e:52:b3:5b:6b:e5:19:06:3c:46:25:9e:7a:ca:ce:92 (RSA)
+80/tcp open  http
+| fingerprint-strings:
+|   GetRequest:
+|     HTTP/1.1 200 OK
+|     Content-Type: text/html; charset=utf-8
+|     Content-Length: 24299
+|     Set-Cookie: JSESSIONID=deleted; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Path=/; HttpOnly
+|     Connection: keep-alive
+|     <!DOCTYPE html>
+|     <html xmlns="http://www.w3.org/1999/xhtml">
+|     <head>
+|     <META http-equiv=Content-Type content="text/html; charset=utf-8" />
+|     <META http-equiv=Pragma content=no-cache>
+|     <META http-equiv=Expires content=0>
+|     <!--
+|     <link rel="stylesheet" href="../css/login.css" type="text/css" />
+|     <link rel="stylesheet" href="../img/login/login.css" type="text/css" />
+|     <link rel="Shortcut Icon" href="../img/login/favicon.ico" type="image/jpeg" />
+|     <style type="text/css">
+|     body{
+|     font-family:Arial, sans-serief;
+|     background-color:#FFFFFF;
+|     margin:0px;
+|     padding:0px;
+|     div.loginBox
+|     display: block;
+|     position:relative;
+|     margin-top:10%;
+|     text-align:center;
+|   HTTPOptions, RTSPRequest:
+|     HTTP/1.1 405 Method Not Allowed
+|     Content-Type: text/html; charset=utf-8
+|     Content-Length: 124
+|     Set-Cookie: JSESSIONID=deleted; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Path=/; HttpOnly
+|     Connection: close
+|_    <html><head><title>405 Method Not Allowed</title></head><body><center><h1>405 Method Not Allowed</h1></center></body></html>
+|_http-title: Site doesn't have a title (text/html; charset=utf-8).
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port80-TCP:V=7.80%I=7%D=12/1%Time=692DD190%P=i686-pc-windows-windows%r(
+SF:GetRequest,5FAE,"HTTP/1\.1\x20200\x20OK\r\nContent-Type:\x20text/html;\
+SF:x20charset=utf-8\r\nContent-Length:\x2024299\r\nSet-Cookie:\x20JSESSION
+SF:ID=deleted;\x20Expires=Thu,\x2001\x20Jan\x201970\x2000:00:01\x20GMT;\x2
+SF:0Path=/;\x20HttpOnly\r\nConnection:\x20keep-alive\r\n\r\n\xef\xbb\xbf<!
+SF:DOCTYPE\x20html>\x20\r\n<html\x20xmlns=\"http://www\.w3\.org/1999/xhtml
+SF:\">\r\n\r\n<head>\r\n<META\x20http-equiv=Content-Type\x20content=\"text
+SF:/html;\x20charset=utf-8\"\x20/>\r\n<META\x20http-equiv=Pragma\x20conten
+SF:t=no-cache>\r\n<META\x20http-equiv=Expires\x20content=0>\r\n\r\n<!--\x2
+SF:0\r\n<link\x20rel=\"stylesheet\"\x20href=\"\.\./css/login\.css\"\x20typ
+SF:e=\"text/css\"\x20/>\r\n<link\x20rel=\"stylesheet\"\x20href=\"\.\./img/
+SF:login/login\.css\"\x20type=\"text/css\"\x20/>\r\n-->\r\n<link\x20rel=\"
+SF:Shortcut\x20Icon\"\x20href=\"\.\./img/login/favicon\.ico\"\x20type=\"im
+SF:age/jpeg\"\x20/>\r\n<style\x20type=\"text/css\">\r\nbody{\r\n\x20\x20\x
+SF:20\x20font-family:Arial,\x20sans-serief;\r\n\x20\x20\x20\x20background-
+SF:color:#FFFFFF;\r\n\x20\x20\x20\x20margin:0px;\r\n\x20\x20\x20\x20paddin
+SF:g:0px;\r\n}\r\ndiv\.loginBox\r\n{\r\n\x20\x20\x20\x20display:\x20block;
+SF:\r\n\x20\x20\x20\x20position:relative;\r\n\x20\x20\x20\x20margin-top:10
+SF:%;\r\n\x20\x20\x20\x20text-align:center;\r\n}")%r(HTTPOptions,148,"HTTP
+SF:/1\.1\x20405\x20Method\x20Not\x20Allowed\r\nContent-Type:\x20text/html;
+SF:\x20charset=utf-8\r\nContent-Length:\x20124\r\nSet-Cookie:\x20JSESSIONI
+SF:D=deleted;\x20Expires=Thu,\x2001\x20Jan\x201970\x2000:00:01\x20GMT;\x20
+SF:Path=/;\x20HttpOnly\r\nConnection:\x20close\r\n\r\n<html><head><title>4
+SF:05\x20Method\x20Not\x20Allowed</title></head><body><center><h1>405\x20M
+SF:ethod\x20Not\x20Allowed</h1></center></body></html>")%r(RTSPRequest,148
+SF:,"HTTP/1\.1\x20405\x20Method\x20Not\x20Allowed\r\nContent-Type:\x20text
+SF:/html;\x20charset=utf-8\r\nContent-Length:\x20124\r\nSet-Cookie:\x20JSE
+SF:SSIONID=deleted;\x20Expires=Thu,\x2001\x20Jan\x201970\x2000:00:01\x20GM
+SF:T;\x20Path=/;\x20HttpOnly\r\nConnection:\x20close\r\n\r\n<html><head><t
+SF:itle>405\x20Method\x20Not\x20Allowed</title></head><body><center><h1>40
+SF:5\x20Method\x20Not\x20Allowed</h1></center></body></html>");
+MAC Address: 48:22:54:D5:E8:28 (Unknown)
+Device type: general purpose
+Running: Linux 2.6.X
+OS CPE: cpe:/o:linux:linux_kernel:2.6
+OS details: Linux 2.6.23 - 2.6.38
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   2.76 ms 192.168.1.2
+
+Nmap scan report for 192.168.1.30
+Host is up (0.0037s latency).
+Not shown: 65530 filtered ports
+PORT      STATE SERVICE            VERSION
+3306/tcp  open  mysql?
+| fingerprint-strings:
+|   DNSStatusRequestTCP:
+|     8.0.42
+|     caching_sha2_password
+|     #08S01Got packets out of order
+|   DNSVersionBindReqTCP:
+|     8.0.42
+|     V;u*
+|     h:Fj
+|     caching_sha2_password
+|     #08S01Got packets out of order
+|   GenericLines:
+|     8.0.42
+|     YHG|
+|     =@2ZMhGW>F|h
+|     caching_sha2_password
+|     #08S01Got packets out of order
+|   GetRequest:
+|     8.0.42
+|     vrp?zcx
+|     ~4NP
+|     caching_sha2_password
+|     #08S01Got packets out of order
+|   HTTPOptions:
+|     8.0.42
+|     |P<C
+|     caching_sha2_password
+|     #08S01Got packets out of order
+|   Help:
+|     8.0.42
+|     :~j;
+|     bt1F:6x
+|     caching_sha2_password
+|     #08S01Got packets out of order
+|   NULL:
+|     8.0.42
+|     YHG|
+|     =@2ZMhGW>F|h
+|     caching_sha2_password
+|   RPCCheck:
+|     8.0.42
+|     3;+s
+|     Pk.*u<
+|     caching_sha2_password
+|     #08S01Got packets out of order
+|   RTSPRequest:
+|     8.0.42
+|     Ll#2x'
+|     %%rKZ.
+|     caching_sha2_password
+|     #08S01Got packets out of order
+|   SSLSessionReq:
+|     8.0.42
+|     ,k[YMV<K
+|     4{po
+|     caching_sha2_password
+|_    #08S01Got packets out of order
+| mysql-info:
+|   Protocol: 10
+|   Version: 8.0.42
+|   Thread ID: 143
+|   Capabilities flags: 65535
+|   Some Capabilities: DontAllowDatabaseTableColumn, Support41Auth, SupportsTransactions, Speaks41ProtocolOld, IgnoreSigpipes, InteractiveClient, SupportsCompression, SwitchToSSLAfterHandshake, LongPassword, Speaks41ProtocolNew, ConnectWithDatabase, ODBCClient, LongColumnFlag, IgnoreSpaceBeforeParenthesis, FoundRows, SupportsLoadDataLocal, SupportsMultipleStatments, SupportsAuthPlugins, SupportsMultipleResults
+|   Status: Autocommit
+|   Salt: \x0B\_>q\x18:0aE4\x0B.:L\x1A7\x0C\x7F%
+|_  Auth Plugin Name: caching_sha2_password
+3389/tcp  open  ssl/ms-wbt-server?
+| rdp-ntlm-info:
+|   Target_Name: WVU-AD
+|   NetBIOS_Domain_Name: WVU-AD
+|   NetBIOS_Computer_Name: SCESBCS4DQDW54D
+|   DNS_Domain_Name: wvu-ad.wvu.edu
+|   DNS_Computer_Name: SCESBCS4DQDW54D.wvu-ad.wvu.edu
+|   DNS_Tree_Name: wvu-ad.wvu.edu
+|   Product_Version: 10.0.26100
+|_  System_Time: 2025-12-01T17:36:52+00:00
+| ssl-cert: Subject: commonName=SCESBCS4DQDW54D.wvu-ad.wvu.edu
+| Not valid before: 2025-09-13T13:33:21
+|_Not valid after:  2026-03-15T13:33:21
+|_ssl-date: 2025-12-01T17:37:03+00:00; 0s from scanner time.
+7680/tcp  open  pando-pub?
+28201/tcp open  pharos             Pharos Notify (printing client)
+33060/tcp open  mysqlx?
+| fingerprint-strings:
+|   DNSStatusRequestTCP, LDAPSearchReq, NotesRPC, SSLSessionReq, TLSSessionReq, X11Probe, afp:
+|     Invalid message"
+|     HY000
+|   LDAPBindReq:
+|     *Parse error unserializing protobuf message"
+|     HY000
+|   oracle-tns:
+|     Invalid message-frame."
+|_    HY000
+2 services unrecognized despite returning data. If you know the service/version, please submit the following fingerprints at https://nmap.org/cgi-bin/submit.cgi?new-service :
+==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+SF-Port3306-TCP:V=7.80%I=7%D=12/1%Time=692DD190%P=i686-pc-windows-windows%
+SF:r(NULL,4E,"J\0\0\0\n8\.0\.42\0T\0\0\0n\x01=\x1cYHG\|\0\xff\xff\xff\x02\
+SF:0\xff\xdf\x15\0\0\0\0\0\0\0\0\0\0=@2ZMhGW>F\|h\0caching_sha2_password\0
+SF:")%r(GenericLines,73,"J\0\0\0\n8\.0\.42\0T\0\0\0n\x01=\x1cYHG\|\0\xff\x
+SF:ff\xff\x02\0\xff\xdf\x15\0\0\0\0\0\0\0\0\0\0=@2ZMhGW>F\|h\0caching_sha2
+SF:_password\0!\0\0\x01\xff\x84\x04#08S01Got\x20packets\x20out\x20of\x20or
+SF:der")%r(GetRequest,73,"J\0\0\0\n8\.0\.42\0V\0\0\0\x0evrp\?zcx\0\xff\xff
+SF:\xff\x02\0\xff\xdf\x15\0\0\0\0\0\0\0\0\0\0\^\x1f\x1e~4NP\x1d\x1bv\x12d\
+SF:0caching_sha2_password\0!\0\0\x01\xff\x84\x04#08S01Got\x20packets\x20ou
+SF:t\x20of\x20order")%r(HTTPOptions,73,"J\0\0\0\n8\.0\.42\0W\0\0\0\x0c\|P<
+SF:C\n\x19\]\0\xff\xff\xff\x02\0\xff\xdf\x15\0\0\0\0\0\0\0\0\0\0\x15\r\x0b
+SF:\)\?\.\x07\x20\x07N\*o\0caching_sha2_password\0!\0\0\x01\xff\x84\x04#08
+SF:S01Got\x20packets\x20out\x20of\x20order")%r(RTSPRequest,73,"J\0\0\0\n8\
+SF:.0\.42\0X\0\0\0;\x14Ll#2x'\0\xff\xff\xff\x02\0\xff\xdf\x15\0\0\0\0\0\0\
+SF:0\0\0\0h\x08\x06h&\n%%rKZ\.\0caching_sha2_password\0!\0\0\x01\xff\x84\x
+SF:04#08S01Got\x20packets\x20out\x20of\x20order")%r(RPCCheck,73,"J\0\0\0\n
+SF:8\.0\.42\0Y\0\0\0\x153;\+s\x01gw\0\xff\xff\xff\x02\0\xff\xdf\x15\0\0\0\
+SF:0\0\0\0\0\0\0Pk\.\*u<\x0e\nt\x0fKv\0caching_sha2_password\0!\0\0\x01\xf
+SF:f\x84\x04#08S01Got\x20packets\x20out\x20of\x20order")%r(DNSVersionBindR
+SF:eqTCP,73,"J\0\0\0\n8\.0\.42\0Z\0\0\0zDW\x03V;u\*\0\xff\xff\xff\x02\0\xf
+SF:f\xdf\x15\0\0\0\0\0\0\0\0\0\0p\x01h:Fj\x1d\x1f\x04pea\0caching_sha2_pas
+SF:sword\0!\0\0\x01\xff\x84\x04#08S01Got\x20packets\x20out\x20of\x20order"
+SF:)%r(DNSStatusRequestTCP,73,"J\0\0\0\n8\.0\.42\0\[\0\0\0U\x15Z\+\x19\+f\
+SF:x01\0\xff\xff\xff\x02\0\xff\xdf\x15\0\0\0\0\0\0\0\0\0\0\x17E2s\x0fb\x06
+SF:s\x1dMo\"\0caching_sha2_password\0!\0\0\x01\xff\x84\x04#08S01Got\x20pac
+SF:kets\x20out\x20of\x20order")%r(Help,73,"J\0\0\0\n8\.0\.42\0\\\0\0\0:~j;
+SF:\x19l\x1f3\0\xff\xff\xff\x02\0\xff\xdf\x15\0\0\0\0\0\0\0\0\0\0L-\"\x1b\
+SF:x04bt1F:6x\0caching_sha2_password\0!\0\0\x01\xff\x84\x04#08S01Got\x20pa
+SF:ckets\x20out\x20of\x20order")%r(SSLSessionReq,73,"J\0\0\0\n8\.0\.42\0\]
+SF:\0\0\0,k\[YMV<K\0\xff\xff\xff\x02\0\xff\xdf\x15\0\0\0\0\0\0\0\0\0\0\x1b
+SF:J\.U\nT\n\x054{po\0caching_sha2_password\0!\0\0\x01\xff\x84\x04#08S01Go
+SF:t\x20packets\x20out\x20of\x20order");
+==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+SF-Port33060-TCP:V=7.80%I=7%D=12/1%Time=692DD190%P=i686-pc-windows-windows
+SF:%r(NULL,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(GenericLines,9,"\x05\0\0\0\
+SF:x0b\x08\x05\x1a\0")%r(GetRequest,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(HT
+SF:TPOptions,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(RTSPRequest,9,"\x05\0\0\0
+SF:\x0b\x08\x05\x1a\0")%r(RPCCheck,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(DNS
+SF:VersionBindReqTCP,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(DNSStatusRequestT
+SF:CP,2B,"\x05\0\0\0\x0b\x08\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88'\x1a\
+SF:x0fInvalid\x20message\"\x05HY000")%r(Help,9,"\x05\0\0\0\x0b\x08\x05\x1a
+SF:\0")%r(SSLSessionReq,2B,"\x05\0\0\0\x0b\x08\x05\x1a\0\x1e\0\0\0\x01\x08
+SF:\x01\x10\x88'\x1a\x0fInvalid\x20message\"\x05HY000")%r(TerminalServerCo
+SF:okie,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(TLSSessionReq,2B,"\x05\0\0\0\x
+SF:0b\x08\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88'\x1a\x0fInvalid\x20messa
+SF:ge\"\x05HY000")%r(Kerberos,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(SMBProgN
+SF:eg,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(X11Probe,2B,"\x05\0\0\0\x0b\x08\
+SF:x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88'\x1a\x0fInvalid\x20message\"\x0
+SF:5HY000")%r(FourOhFourRequest,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(LPDStr
+SF:ing,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(LDAPSearchReq,2B,"\x05\0\0\0\x0
+SF:b\x08\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88'\x1a\x0fInvalid\x20messag
+SF:e\"\x05HY000")%r(LDAPBindReq,46,"\x05\0\0\0\x0b\x08\x05\x1a\x009\0\0\0\
+SF:x01\x08\x01\x10\x88'\x1a\*Parse\x20error\x20unserializing\x20protobuf\x
+SF:20message\"\x05HY000")%r(SIPOptions,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r
+SF:(LANDesk-RC,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(TerminalServer,9,"\x05\
+SF:0\0\0\x0b\x08\x05\x1a\0")%r(NCP,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(Not
+SF:esRPC,2B,"\x05\0\0\0\x0b\x08\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88'\x
+SF:1a\x0fInvalid\x20message\"\x05HY000")%r(JavaRMI,9,"\x05\0\0\0\x0b\x08\x
+SF:05\x1a\0")%r(WMSRequest,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(oracle-tns,
+SF:32,"\x05\0\0\0\x0b\x08\x05\x1a\0%\0\0\0\x01\x08\x01\x10\x88'\x1a\x16Inv
+SF:alid\x20message-frame\.\"\x05HY000")%r(ms-sql-s,9,"\x05\0\0\0\x0b\x08\x
+SF:05\x1a\0")%r(afp,2B,"\x05\0\0\0\x0b\x08\x05\x1a\0\x1e\0\0\0\x01\x08\x01
+SF:\x10\x88'\x1a\x0fInvalid\x20message\"\x05HY000");
+MAC Address: BC:38:98:34:0D:28 (Unknown)
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Aggressive OS guesses: Microsoft Windows 10 (94%), Microsoft Windows Server 2008 SP1 (91%), Microsoft Windows 10 1511 - 1607 (88%), Microsoft Windows 10 1703 (88%), Microsoft Windows Phone 7.5 or 8.0 (88%), Microsoft Windows 10 1607 (87%), Microsoft Windows 10 1511 (87%), Microsoft Windows Server 2008 R2 or Windows 8.1 (87%), Microsoft Windows Server 2016 (87%), Microsoft Windows 7 Professional or Windows 8 (87%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   3.67 ms 192.168.1.30
+
+Nmap scan report for 192.168.1.51
+Host is up (0.0014s latency).
+Not shown: 65533 closed ports
+PORT      STATE SERVICE       VERSION
+80/tcp    open  http
+| fingerprint-strings:
+|   GetRequest:
+|     HTTP/1.0 302 Redirect
+|     Date: WED JAN 28 23:36:33 1970
+|     Content-Length: 214
+|     Connection: close
+|     Location: http://localhost/index.html
+|     Cache-Control: no-store, max-age=0
+|     Strict-Transport-Security: max-age=31536000 ; includeSubDomains
+|     X-Frame-Options: SAMEORIGIN
+|     Content-Security-Policy: form-action 'self'; frame-src 'self'; object-src 'none'; default-src 'self'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' ; block-all-mixed-content; style-src 'self' 'unsafe-hashes' 'sha256-C1Wm2thZBI0ZnFrVeGrUcPYUjGDDKSysR0ReamqR6+o=' 'sha256-m4haDI3BAdm6PGOZrkT39tt/XGwERbVqxzWNcpj/xv4=' 'sha256-TpW1zmQwCzJJ5Ozf0NwLln0k7kb8bUcOVqdD2Xjt0pg=' 'sha256-WOZnXDDDSNhjaH6gFbLl40rF55xCde1kcv28ooi72/g=' 'sha256-08QVnDHrPomdHaLHE0j7/P4UpvJq8V7NJgZMA9dzD0U=' 'sha256-b//BnHzVzrgGeaX1L+1tO1/H4oNSJKfdGGxPM6PyNTI=' 'sha256-J84fiqTd6NNpaIrcOOJD9beNWwOziUta3yN74qqvHc4=' 'sha256-0V5/fLoTH6AIz3LwPzc/fJk6f/SSrU
+|   HTTPOptions:
+|     HTTP/1.0 404 Not Found
+|     Date: WED JAN 28 23:36:33 1970
+|     Content-Length: 145
+|     Connection: close
+|     Content-Type: text/html
+|     Cache-Control: no-store, max-age=0
+|     Strict-Transport-Security: max-age=31536000 ; includeSubDomains
+|     X-Frame-Options: SAMEORIGIN
+|_    Content-Security-Policy: form-action 'self'; frame-src 'self'; object-src 'none'; default-src 'self'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' ; block-all-mixed-content; style-src 'self' 'unsafe-hashes' 'sha256-C1Wm2thZBI0ZnFrVeGrUcPYUjGDDKSysR0ReamqR6+o=' 'sha256-m4haDI3BAdm6PGOZrkT39tt/XGwERbVqxzWNcpj/xv4=' 'sha256-TpW1zmQwCzJJ5Ozf0NwLln0k7kb8bUcOVqdD2Xjt0pg=' 'sha256-WOZnXDDDSNhjaH6gFbLl40rF55xCde1kcv28ooi72/g=' 'sha256-08QVnDHrPomdHaLHE0j7/P4UpvJq8V7NJgZMA9dzD0U=' 'sha256-b//BnHzVzrgGeaX1L+1tO1/H4oNSJKfdGGxPM6PyNTI=' 'sha256-J84fiqTd6NNpaIrcOOJD9beNWwOziUta3yN74qqvHc4=' 'sha256-0V5/fLoTH6AIz3LwPzc/fJk6f/SSrUGN1hZNQXZRs2Y
+| http-title: Rockwell Automation
+|_Requested resource was http://192.168.1.51/index.html
+44818/tcp open  EtherNet-IP-2
+| enip-info:
+|   type: Programmable Logic Controller (14)
+|   vendor: Rockwell Automation/Allen-Bradley (1)
+|   productName: 1769-L18ER-BB1B/C LOGIX5318ER
+|   serialNumber: 0x709892eb
+|   productCode: 154
+|   revision: 36.11
+|   status: 0x0030
+|   state: 0x03
+|_  deviceIp: 192.168.1.51
+| fingerprint-strings:
+|   TLSSessionReq:
+|_    rando
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port80-TCP:V=7.80%I=7%D=12/1%Time=692DD18F%P=i686-pc-windows-windows%r(
+SF:GetRequest,8E5,"HTTP/1\.0\x20302\x20Redirect\r\nDate:\x20WED\x20JAN\x20
+SF:28\x2023:36:33\x201970\r\nContent-Length:\x20214\r\nConnection:\x20clos
+SF:e\r\nLocation:\x20http://localhost/index\.html\r\nCache-Control:\x20no-
+SF:store,\x20max-age=0\r\nStrict-Transport-Security:\x20max-age=31536000\x
+SF:20;\x20includeSubDomains\r\nX-Frame-Options:\x20SAMEORIGIN\r\nContent-S
+SF:ecurity-Policy:\x20form-action\x20'self';\x20frame-src\x20'self';\x20ob
+SF:ject-src\x20'none';\x20default-src\x20'self';\x20frame-ancestors\x20'se
+SF:lf';\x20script-src\x20'self'\x20'unsafe-inline'\x20;\x20block-all-mixed
+SF:-content;\x20style-src\x20'self'\x20'unsafe-hashes'\x20'sha256-C1Wm2thZ
+SF:BI0ZnFrVeGrUcPYUjGDDKSysR0ReamqR6\+o='\x20'sha256-m4haDI3BAdm6PGOZrkT39
+SF:tt/XGwERbVqxzWNcpj/xv4='\x20'sha256-TpW1zmQwCzJJ5Ozf0NwLln0k7kb8bUcOVqd
+SF:D2Xjt0pg='\x20'sha256-WOZnXDDDSNhjaH6gFbLl40rF55xCde1kcv28ooi72/g='\x20
+SF:'sha256-08QVnDHrPomdHaLHE0j7/P4UpvJq8V7NJgZMA9dzD0U='\x20'sha256-b//BnH
+SF:zVzrgGeaX1L\+1tO1/H4oNSJKfdGGxPM6PyNTI='\x20'sha256-J84fiqTd6NNpaIrcOOJ
+SF:D9beNWwOziUta3yN74qqvHc4='\x20'sha256-0V5/fLoTH6AIz3LwPzc/fJk6f/SSrU")%
+SF:r(HTTPOptions,893,"HTTP/1\.0\x20404\x20Not\x20Found\r\nDate:\x20WED\x20
+SF:JAN\x2028\x2023:36:33\x201970\r\nContent-Length:\x20145\r\nConnection:\
+SF:x20close\r\nContent-Type:\x20text/html\r\nCache-Control:\x20no-store,\x
+SF:20max-age=0\r\nStrict-Transport-Security:\x20max-age=31536000\x20;\x20i
+SF:ncludeSubDomains\r\nX-Frame-Options:\x20SAMEORIGIN\r\nContent-Security-
+SF:Policy:\x20form-action\x20'self';\x20frame-src\x20'self';\x20object-src
+SF:\x20'none';\x20default-src\x20'self';\x20frame-ancestors\x20'self';\x20
+SF:script-src\x20'self'\x20'unsafe-inline'\x20;\x20block-all-mixed-content
+SF:;\x20style-src\x20'self'\x20'unsafe-hashes'\x20'sha256-C1Wm2thZBI0ZnFrV
+SF:eGrUcPYUjGDDKSysR0ReamqR6\+o='\x20'sha256-m4haDI3BAdm6PGOZrkT39tt/XGwER
+SF:bVqxzWNcpj/xv4='\x20'sha256-TpW1zmQwCzJJ5Ozf0NwLln0k7kb8bUcOVqdD2Xjt0pg
+SF:='\x20'sha256-WOZnXDDDSNhjaH6gFbLl40rF55xCde1kcv28ooi72/g='\x20'sha256-
+SF:08QVnDHrPomdHaLHE0j7/P4UpvJq8V7NJgZMA9dzD0U='\x20'sha256-b//BnHzVzrgGea
+SF:X1L\+1tO1/H4oNSJKfdGGxPM6PyNTI='\x20'sha256-J84fiqTd6NNpaIrcOOJD9beNWwO
+SF:ziUta3yN74qqvHc4='\x20'sha256-0V5/fLoTH6AIz3LwPzc/fJk6f/SSrUGN1hZNQXZRs
+SF:2Y");
+MAC Address: BC:F4:99:0C:8B:ED (Unknown)
+Device type: printer
+Running: Xerox embedded
+OS CPE: cpe:/h:xerox:phaser_6600dn
+OS details: Xerox Phaser 6600DN printer
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   1.44 ms 192.168.1.51
+
+Nmap scan report for 192.168.1.52
+Host is up (0.0035s latency).
+Not shown: 65533 closed ports
+PORT      STATE SERVICE       VERSION
+80/tcp    open  http
+| fingerprint-strings:
+|   GetRequest:
+|     HTTP/1.0 302 Redirect
+|     Date: TUE JAN 13 00:28:39 1970
+|     Content-Length: 214
+|     Connection: close
+|     Location: http://localhost/index.html
+|     Cache-Control: no-store, max-age=0
+|     Strict-Transport-Security: max-age=31536000 ; includeSubDomains
+|     X-Frame-Options: SAMEORIGIN
+|     Content-Security-Policy: form-action 'self'; frame-src 'self'; object-src 'none'; default-src 'self'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' ; block-all-mixed-content; style-src 'self' 'unsafe-hashes' 'sha256-C1Wm2thZBI0ZnFrVeGrUcPYUjGDDKSysR0ReamqR6+o=' 'sha256-m4haDI3BAdm6PGOZrkT39tt/XGwERbVqxzWNcpj/xv4=' 'sha256-TpW1zmQwCzJJ5Ozf0NwLln0k7kb8bUcOVqdD2Xjt0pg=' 'sha256-WOZnXDDDSNhjaH6gFbLl40rF55xCde1kcv28ooi72/g=' 'sha256-08QVnDHrPomdHaLHE0j7/P4UpvJq8V7NJgZMA9dzD0U=' 'sha256-b//BnHzVzrgGeaX1L+1tO1/H4oNSJKfdGGxPM6PyNTI=' 'sha256-J84fiqTd6NNpaIrcOOJD9beNWwOziUta3yN74qqvHc4=' 'sha256-0V5/fLoTH6AIz3LwPzc/fJk6f/SSrU
+|   HTTPOptions:
+|     HTTP/1.0 404 Not Found
+|     Date: TUE JAN 13 00:28:39 1970
+|     Content-Length: 145
+|     Connection: close
+|     Content-Type: text/html
+|     Cache-Control: no-store, max-age=0
+|     Strict-Transport-Security: max-age=31536000 ; includeSubDomains
+|     X-Frame-Options: SAMEORIGIN
+|_    Content-Security-Policy: form-action 'self'; frame-src 'self'; object-src 'none'; default-src 'self'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' ; block-all-mixed-content; style-src 'self' 'unsafe-hashes' 'sha256-C1Wm2thZBI0ZnFrVeGrUcPYUjGDDKSysR0ReamqR6+o=' 'sha256-m4haDI3BAdm6PGOZrkT39tt/XGwERbVqxzWNcpj/xv4=' 'sha256-TpW1zmQwCzJJ5Ozf0NwLln0k7kb8bUcOVqdD2Xjt0pg=' 'sha256-WOZnXDDDSNhjaH6gFbLl40rF55xCde1kcv28ooi72/g=' 'sha256-08QVnDHrPomdHaLHE0j7/P4UpvJq8V7NJgZMA9dzD0U=' 'sha256-b//BnHzVzrgGeaX1L+1tO1/H4oNSJKfdGGxPM6PyNTI=' 'sha256-J84fiqTd6NNpaIrcOOJD9beNWwOziUta3yN74qqvHc4=' 'sha256-0V5/fLoTH6AIz3LwPzc/fJk6f/SSrUGN1hZNQXZRs2Y
+| http-title: Rockwell Automation
+|_Requested resource was http://192.168.1.52/index.html
+44818/tcp open  EtherNet-IP-2
+| enip-info:
+|   type: Programmable Logic Controller (14)
+|   vendor: Rockwell Automation/Allen-Bradley (1)
+|   productName: 1769-L18ERM-BB1B/C LOGIX5318ERM
+|   serialNumber: 0x7096c103
+|   productCode: 155
+|   revision: 36.11
+|   status: 0x0030
+|   state: 0x03
+|_  deviceIp: 192.168.1.52
+| fingerprint-strings:
+|   TLSSessionReq:
+|_    rando
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port80-TCP:V=7.80%I=7%D=12/1%Time=692DD18F%P=i686-pc-windows-windows%r(
+SF:GetRequest,8E5,"HTTP/1\.0\x20302\x20Redirect\r\nDate:\x20TUE\x20JAN\x20
+SF:13\x2000:28:39\x201970\r\nContent-Length:\x20214\r\nConnection:\x20clos
+SF:e\r\nLocation:\x20http://localhost/index\.html\r\nCache-Control:\x20no-
+SF:store,\x20max-age=0\r\nStrict-Transport-Security:\x20max-age=31536000\x
+SF:20;\x20includeSubDomains\r\nX-Frame-Options:\x20SAMEORIGIN\r\nContent-S
+SF:ecurity-Policy:\x20form-action\x20'self';\x20frame-src\x20'self';\x20ob
+SF:ject-src\x20'none';\x20default-src\x20'self';\x20frame-ancestors\x20'se
+SF:lf';\x20script-src\x20'self'\x20'unsafe-inline'\x20;\x20block-all-mixed
+SF:-content;\x20style-src\x20'self'\x20'unsafe-hashes'\x20'sha256-C1Wm2thZ
+SF:BI0ZnFrVeGrUcPYUjGDDKSysR0ReamqR6\+o='\x20'sha256-m4haDI3BAdm6PGOZrkT39
+SF:tt/XGwERbVqxzWNcpj/xv4='\x20'sha256-TpW1zmQwCzJJ5Ozf0NwLln0k7kb8bUcOVqd
+SF:D2Xjt0pg='\x20'sha256-WOZnXDDDSNhjaH6gFbLl40rF55xCde1kcv28ooi72/g='\x20
+SF:'sha256-08QVnDHrPomdHaLHE0j7/P4UpvJq8V7NJgZMA9dzD0U='\x20'sha256-b//BnH
+SF:zVzrgGeaX1L\+1tO1/H4oNSJKfdGGxPM6PyNTI='\x20'sha256-J84fiqTd6NNpaIrcOOJ
+SF:D9beNWwOziUta3yN74qqvHc4='\x20'sha256-0V5/fLoTH6AIz3LwPzc/fJk6f/SSrU")%
+SF:r(HTTPOptions,893,"HTTP/1\.0\x20404\x20Not\x20Found\r\nDate:\x20TUE\x20
+SF:JAN\x2013\x2000:28:39\x201970\r\nContent-Length:\x20145\r\nConnection:\
+SF:x20close\r\nContent-Type:\x20text/html\r\nCache-Control:\x20no-store,\x
+SF:20max-age=0\r\nStrict-Transport-Security:\x20max-age=31536000\x20;\x20i
+SF:ncludeSubDomains\r\nX-Frame-Options:\x20SAMEORIGIN\r\nContent-Security-
+SF:Policy:\x20form-action\x20'self';\x20frame-src\x20'self';\x20object-src
+SF:\x20'none';\x20default-src\x20'self';\x20frame-ancestors\x20'self';\x20
+SF:script-src\x20'self'\x20'unsafe-inline'\x20;\x20block-all-mixed-content
+SF:;\x20style-src\x20'self'\x20'unsafe-hashes'\x20'sha256-C1Wm2thZBI0ZnFrV
+SF:eGrUcPYUjGDDKSysR0ReamqR6\+o='\x20'sha256-m4haDI3BAdm6PGOZrkT39tt/XGwER
+SF:bVqxzWNcpj/xv4='\x20'sha256-TpW1zmQwCzJJ5Ozf0NwLln0k7kb8bUcOVqdD2Xjt0pg
+SF:='\x20'sha256-WOZnXDDDSNhjaH6gFbLl40rF55xCde1kcv28ooi72/g='\x20'sha256-
+SF:08QVnDHrPomdHaLHE0j7/P4UpvJq8V7NJgZMA9dzD0U='\x20'sha256-b//BnHzVzrgGea
+SF:X1L\+1tO1/H4oNSJKfdGGxPM6PyNTI='\x20'sha256-J84fiqTd6NNpaIrcOOJD9beNWwO
+SF:ziUta3yN74qqvHc4='\x20'sha256-0V5/fLoTH6AIz3LwPzc/fJk6f/SSrUGN1hZNQXZRs
+SF:2Y");
+MAC Address: BC:F4:99:0B:CE:B4 (Unknown)
+No exact OS matches for host (If you know what OS is running on it, see https://nmap.org/submit/ ).
+TCP/IP fingerprint:
+OS:SCAN(V=7.80%E=4%D=12/1%OT=80%CT=1%CU=42731%PV=Y%DS=1%DC=D%G=Y%M=BCF499%T
+OS:M=692DD240%P=i686-pc-windows-windows)SEQ(SP=88%GCD=1%ISR=99%TI=BI%CI=BI%
+OS:II=BI%SS=S%TS=U)SEQ(SP=85%GCD=1%ISR=99%TI=RD%CI=BI%II=BI%TS=U)SEQ(CI=BI%
+OS:II=BI)OPS(O1=NNM592SNW0%O2=NNM592SNW0%O3=M592NW0%O4=NNM592SNW0%O5=NNM592
+OS:SNW0%O6=NNM592S)WIN(W1=2710%W2=2710%W3=2710%W4=2710%W5=2710%W6=2710)ECN(
+OS:R=Y%DF=Y%T=40%W=2710%O=NNM592SNW0%CC=N%Q=)T1(R=Y%DF=Y%T=40%S=O%A=S+%F=AS
+OS:%RD=0%Q=)T2(R=N)T3(R=N)T4(R=Y%DF=N%T=FF%W=0%S=A%A=Z%F=R%O=%RD=0%Q=)T5(R=
+OS:Y%DF=N%T=FF%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)T6(R=Y%DF=N%T=FF%W=0%S=A%A=Z%F=
+OS:R%O=%RD=0%Q=)T7(R=Y%DF=N%T=FF%W=0%S=Z%A=Z%F=R%O=%RD=0%Q=)U1(R=Y%DF=N%T=4
+OS:0%IPL=138%UN=0%RIPL=G%RID=G%RIPCK=G%RUCK=G%RUD=G)IE(R=Y%DFI=S%T=40%CD=Z)
+
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   3.46 ms 192.168.1.52
+
+Stats: 0:17:13 elapsed; 243 hosts completed (16 up), 12 undergoing SYN Stealth Scan
+SYN Stealth Scan Timing: About 66.72% done; ETC: 12:49 (0:04:06 remaining)
+Nmap scan report for 192.168.1.54
+Host is up (0.0046s latency).
+Not shown: 65533 closed ports
+PORT      STATE SERVICE       VERSION
+80/tcp    open  http
+| fingerprint-strings:
+|   GetRequest:
+|     HTTP/1.0 302 Redirect
+|     Date: WED JAN 28 23:52:00 1970
+|     Content-Length: 214
+|     Connection: close
+|     Location: http://localhost/index.html
+|     Cache-Control: no-store, max-age=0
+|     Strict-Transport-Security: max-age=31536000 ; includeSubDomains
+|     X-Frame-Options: SAMEORIGIN
+|     Content-Security-Policy: form-action 'self'; frame-src 'self'; object-src 'none'; default-src 'self'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' ; block-all-mixed-content; style-src 'self' 'unsafe-hashes' 'sha256-C1Wm2thZBI0ZnFrVeGrUcPYUjGDDKSysR0ReamqR6+o=' 'sha256-m4haDI3BAdm6PGOZrkT39tt/XGwERbVqxzWNcpj/xv4=' 'sha256-TpW1zmQwCzJJ5Ozf0NwLln0k7kb8bUcOVqdD2Xjt0pg=' 'sha256-WOZnXDDDSNhjaH6gFbLl40rF55xCde1kcv28ooi72/g=' 'sha256-08QVnDHrPomdHaLHE0j7/P4UpvJq8V7NJgZMA9dzD0U=' 'sha256-b//BnHzVzrgGeaX1L+1tO1/H4oNSJKfdGGxPM6PyNTI=' 'sha256-J84fiqTd6NNpaIrcOOJD9beNWwOziUta3yN74qqvHc4=' 'sha256-0V5/fLoTH6AIz3LwPzc/fJk6f/SSrU
+|   HTTPOptions:
+|     HTTP/1.0 404 Not Found
+|     Date: WED JAN 28 23:52:00 1970
+|     Content-Length: 145
+|     Connection: close
+|     Content-Type: text/html
+|     Cache-Control: no-store, max-age=0
+|     Strict-Transport-Security: max-age=31536000 ; includeSubDomains
+|     X-Frame-Options: SAMEORIGIN
+|_    Content-Security-Policy: form-action 'self'; frame-src 'self'; object-src 'none'; default-src 'self'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' ; block-all-mixed-content; style-src 'self' 'unsafe-hashes' 'sha256-C1Wm2thZBI0ZnFrVeGrUcPYUjGDDKSysR0ReamqR6+o=' 'sha256-m4haDI3BAdm6PGOZrkT39tt/XGwERbVqxzWNcpj/xv4=' 'sha256-TpW1zmQwCzJJ5Ozf0NwLln0k7kb8bUcOVqdD2Xjt0pg=' 'sha256-WOZnXDDDSNhjaH6gFbLl40rF55xCde1kcv28ooi72/g=' 'sha256-08QVnDHrPomdHaLHE0j7/P4UpvJq8V7NJgZMA9dzD0U=' 'sha256-b//BnHzVzrgGeaX1L+1tO1/H4oNSJKfdGGxPM6PyNTI=' 'sha256-J84fiqTd6NNpaIrcOOJD9beNWwOziUta3yN74qqvHc4=' 'sha256-0V5/fLoTH6AIz3LwPzc/fJk6f/SSrUGN1hZNQXZRs2Y
+| http-title: Rockwell Automation
+|_Requested resource was http://192.168.1.54/index.html
+44818/tcp open  EtherNet-IP-2
+| enip-info:
+|   type: Programmable Logic Controller (14)
+|   vendor: Rockwell Automation/Allen-Bradley (1)
+|   productName: 1769-L18ER-BB1B/C LOGIX5318ER
+|   serialNumber: 0x709892ee
+|   productCode: 154
+|   revision: 36.11
+|   status: 0x0030
+|   state: 0x03
+|_  deviceIp: 192.168.1.54
+| fingerprint-strings:
+|   TLSSessionReq:
+|_    rando
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port80-TCP:V=7.80%I=7%D=12/1%Time=692DD53A%P=i686-pc-windows-windows%r(
+SF:GetRequest,8E5,"HTTP/1\.0\x20302\x20Redirect\r\nDate:\x20WED\x20JAN\x20
+SF:28\x2023:52:00\x201970\r\nContent-Length:\x20214\r\nConnection:\x20clos
+SF:e\r\nLocation:\x20http://localhost/index\.html\r\nCache-Control:\x20no-
+SF:store,\x20max-age=0\r\nStrict-Transport-Security:\x20max-age=31536000\x
+SF:20;\x20includeSubDomains\r\nX-Frame-Options:\x20SAMEORIGIN\r\nContent-S
+SF:ecurity-Policy:\x20form-action\x20'self';\x20frame-src\x20'self';\x20ob
+SF:ject-src\x20'none';\x20default-src\x20'self';\x20frame-ancestors\x20'se
+SF:lf';\x20script-src\x20'self'\x20'unsafe-inline'\x20;\x20block-all-mixed
+SF:-content;\x20style-src\x20'self'\x20'unsafe-hashes'\x20'sha256-C1Wm2thZ
+SF:BI0ZnFrVeGrUcPYUjGDDKSysR0ReamqR6\+o='\x20'sha256-m4haDI3BAdm6PGOZrkT39
+SF:tt/XGwERbVqxzWNcpj/xv4='\x20'sha256-TpW1zmQwCzJJ5Ozf0NwLln0k7kb8bUcOVqd
+SF:D2Xjt0pg='\x20'sha256-WOZnXDDDSNhjaH6gFbLl40rF55xCde1kcv28ooi72/g='\x20
+SF:'sha256-08QVnDHrPomdHaLHE0j7/P4UpvJq8V7NJgZMA9dzD0U='\x20'sha256-b//BnH
+SF:zVzrgGeaX1L\+1tO1/H4oNSJKfdGGxPM6PyNTI='\x20'sha256-J84fiqTd6NNpaIrcOOJ
+SF:D9beNWwOziUta3yN74qqvHc4='\x20'sha256-0V5/fLoTH6AIz3LwPzc/fJk6f/SSrU")%
+SF:r(HTTPOptions,893,"HTTP/1\.0\x20404\x20Not\x20Found\r\nDate:\x20WED\x20
+SF:JAN\x2028\x2023:52:00\x201970\r\nContent-Length:\x20145\r\nConnection:\
+SF:x20close\r\nContent-Type:\x20text/html\r\nCache-Control:\x20no-store,\x
+SF:20max-age=0\r\nStrict-Transport-Security:\x20max-age=31536000\x20;\x20i
+SF:ncludeSubDomains\r\nX-Frame-Options:\x20SAMEORIGIN\r\nContent-Security-
+SF:Policy:\x20form-action\x20'self';\x20frame-src\x20'self';\x20object-src
+SF:\x20'none';\x20default-src\x20'self';\x20frame-ancestors\x20'self';\x20
+SF:script-src\x20'self'\x20'unsafe-inline'\x20;\x20block-all-mixed-content
+SF:;\x20style-src\x20'self'\x20'unsafe-hashes'\x20'sha256-C1Wm2thZBI0ZnFrV
+SF:eGrUcPYUjGDDKSysR0ReamqR6\+o='\x20'sha256-m4haDI3BAdm6PGOZrkT39tt/XGwER
+SF:bVqxzWNcpj/xv4='\x20'sha256-TpW1zmQwCzJJ5Ozf0NwLln0k7kb8bUcOVqdD2Xjt0pg
+SF:='\x20'sha256-WOZnXDDDSNhjaH6gFbLl40rF55xCde1kcv28ooi72/g='\x20'sha256-
+SF:08QVnDHrPomdHaLHE0j7/P4UpvJq8V7NJgZMA9dzD0U='\x20'sha256-b//BnHzVzrgGea
+SF:X1L\+1tO1/H4oNSJKfdGGxPM6PyNTI='\x20'sha256-J84fiqTd6NNpaIrcOOJD9beNWwO
+SF:ziUta3yN74qqvHc4='\x20'sha256-0V5/fLoTH6AIz3LwPzc/fJk6f/SSrUGN1hZNQXZRs
+SF:2Y");
+MAC Address: BC:F4:99:0C:8B:F0 (Unknown)
+No exact OS matches for host (If you know what OS is running on it, see https://nmap.org/submit/ ).
+TCP/IP fingerprint:
+OS:SCAN(V=7.80%E=4%D=12/1%OT=80%CT=1%CU=32451%PV=Y%DS=1%DC=D%G=Y%M=BCF499%T
+OS:M=692DD61A%P=i686-pc-windows-windows)SEQ(SP=95%GCD=1%ISR=99%TI=BI%CI=BI%
+OS:II=BI%SS=S%TS=U)SEQ(SP=96%GCD=1%ISR=99%TI=RD%CI=BI%II=BI%TS=U)SEQ(CI=BI%
+OS:II=BI)OPS(O1=NNM592SNW0%O2=NNM592SNW0%O3=M592NW0%O4=NNM592SNW0%O5=NNM592
+OS:SNW0%O6=NNM592S)WIN(W1=2710%W2=2710%W3=2710%W4=2710%W5=2710%W6=2710)ECN(
+OS:R=Y%DF=Y%T=40%W=2710%O=NNM592SNW0%CC=N%Q=)T1(R=Y%DF=Y%T=40%S=O%A=S+%F=AS
+OS:%RD=0%Q=)T2(R=N)T3(R=N)T4(R=Y%DF=N%T=FF%W=0%S=A%A=Z%F=R%O=%RD=0%Q=)T5(R=
+OS:Y%DF=N%T=FF%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)T6(R=Y%DF=N%T=FF%W=0%S=A%A=Z%F=
+OS:R%O=%RD=0%Q=)T7(R=Y%DF=N%T=FF%W=0%S=Z%A=Z%F=R%O=%RD=0%Q=)U1(R=Y%DF=N%T=4
+OS:0%IPL=138%UN=0%RIPL=G%RID=G%RIPCK=G%RUCK=G%RUD=G)IE(R=Y%DFI=S%T=40%CD=Z)
+
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   4.61 ms 192.168.1.54
+
+Nmap scan report for 192.168.1.70
+Host is up (0.0063s latency).
+Not shown: 65532 filtered ports
+PORT      STATE  SERVICE       VERSION
+2222/tcp  closed EtherNetIP-1
+27053/tcp closed unknown
+44818/tcp open   EtherNet-IP-2
+| enip-info:
+|   type: Human-Machine Interface (24)
+|   vendor: Rockwell Automation/Allen-Bradley (1)
+|   productName: 2713P-T10CD1 PanelView 5310
+|   serialNumber: 0x15fc2208
+|   productCode: 1167
+|   revision: 9.2
+|   status: 0x0030
+|   state: 0x03
+|_  deviceIp: 192.168.1.70
+| fingerprint-strings:
+|   TLSSessionReq:
+|_    rando
+MAC Address: 08:61:95:E5:A9:F9 (Unknown)
+Aggressive OS guesses: Linux 2.6.32 - 3.13 (95%), Linux 2.6.22 - 2.6.36 (93%), Linux 3.10 - 4.11 (93%), Linux 2.6.39 (93%), Linux 3.10 (92%), Linux 2.6.32 (92%), Linux 3.2 - 4.9 (92%), Linux 2.6.32 - 3.10 (91%), Linux 2.6.18 (91%), Linux 3.16 - 4.6 (91%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   6.28 ms 192.168.1.70
+
+Nmap scan report for 192.168.1.101
+Host is up (0.0053s latency).
+Not shown: 65534 closed ports
+PORT      STATE SERVICE       VERSION
+44818/tcp open  EtherNetIP-2?
+|_enip-info: ERROR: Script execution failed (use -d to debug)
+MAC Address: 5C:21:67:45:16:97 (Unknown)
+Aggressive OS guesses: Panasonic BL-C210 Network Camera (95%), Vegastream Vega 400 VoIP Gateway (94%), Radware LinkProof load balancer (93%), Bay Networks BayStack 450 switch (software version 4.2.0.16) (93%), Minolta Di550 laser printer (92%), D-Link DPR-1260 print server; or DGL-4300, DGL-4500, DIR-615, DIR-625, DIR-628, DIR-655, or DIR-855 WAP (91%), IBM BladeCenter management module, IBM System Storage TS3100/TS3200 Express Model tape library, or HP StorageWorks MSL2024 tape library (91%), Dell 1815dn printer (91%), VxWorks (91%), Bay Networks BayStack 450 switch (software version 3.1.0.22) (90%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   5.32 ms 192.168.1.101
+
+Nmap scan report for 192.168.1.102
+Host is up (0.0046s latency).
+Not shown: 65534 closed ports
+PORT      STATE SERVICE       VERSION
+44818/tcp open  EtherNetIP-2?
+|_enip-info: ERROR: Script execution failed (use -d to debug)
+MAC Address: 5C:21:67:48:87:0D (Unknown)
+Aggressive OS guesses: Panasonic BL-C210 Network Camera (95%), Vegastream Vega 400 VoIP Gateway (94%), Radware LinkProof load balancer (93%), Bay Networks BayStack 450 switch (software version 4.2.0.16) (93%), Minolta Di550 laser printer (92%), D-Link DPR-1260 print server; or DGL-4300, DGL-4500, DIR-615, DIR-625, DIR-628, DIR-655, or DIR-855 WAP (91%), IBM BladeCenter management module, IBM System Storage TS3100/TS3200 Express Model tape library, or HP StorageWorks MSL2024 tape library (91%), Dell 1815dn printer (91%), VxWorks (91%), Bay Networks BayStack 450 switch (software version 3.1.0.22) (90%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   4.58 ms 192.168.1.102
+
+Nmap scan report for 192.168.1.103
+Host is up (0.0029s latency).
+Not shown: 65534 closed ports
+PORT      STATE SERVICE       VERSION
+44818/tcp open  EtherNetIP-2?
+|_enip-info: ERROR: Script execution failed (use -d to debug)
+MAC Address: 5C:21:67:48:87:1D (Unknown)
+Aggressive OS guesses: Vegastream Vega 400 VoIP Gateway (95%), Panasonic BL-C210 Network Camera (95%), Radware LinkProof load balancer (93%), Bay Networks BayStack 450 switch (software version 4.2.0.16) (93%), Minolta Di550 laser printer (92%), D-Link DPR-1260 print server; or DGL-4300, DGL-4500, DIR-615, DIR-625, DIR-628, DIR-655, or DIR-855 WAP (91%), IBM BladeCenter management module, IBM System Storage TS3100/TS3200 Express Model tape library, or HP StorageWorks MSL2024 tape library (91%), Dell 1815dn printer (91%), VxWorks (91%), Bay Networks BayStack 450 switch (software version 3.1.0.22) (90%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   2.94 ms 192.168.1.103
+
+Nmap scan report for 192.168.1.104
+Host is up (0.0026s latency).
+Not shown: 65534 closed ports
+PORT      STATE SERVICE       VERSION
+44818/tcp open  EtherNetIP-2?
+|_enip-info: ERROR: Script execution failed (use -d to debug)
+MAC Address: 5C:21:67:48:86:BE (Unknown)
+Aggressive OS guesses: Vegastream Vega 400 VoIP Gateway (95%), Panasonic BL-C210 Network Camera (95%), Radware LinkProof load balancer (93%), Bay Networks BayStack 450 switch (software version 4.2.0.16) (93%), Minolta Di550 laser printer (92%), D-Link DPR-1260 print server; or DGL-4300, DGL-4500, DIR-615, DIR-625, DIR-628, DIR-655, or DIR-855 WAP (91%), IBM BladeCenter management module, IBM System Storage TS3100/TS3200 Express Model tape library, or HP StorageWorks MSL2024 tape library (91%), Dell 1815dn printer (91%), VxWorks (91%), Bay Networks BayStack 450 switch (software version 3.1.0.22) (90%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   2.65 ms 192.168.1.104
+
+Nmap scan report for 192.168.1.105
+Host is up (0.0028s latency).
+Not shown: 65534 closed ports
+PORT      STATE SERVICE       VERSION
+44818/tcp open  EtherNetIP-2?
+|_enip-info: ERROR: Script execution failed (use -d to debug)
+MAC Address: 5C:21:67:48:87:12 (Unknown)
+Aggressive OS guesses: Vegastream Vega 400 VoIP Gateway (95%), Panasonic BL-C210 Network Camera (95%), Radware LinkProof load balancer (93%), Bay Networks BayStack 450 switch (software version 4.2.0.16) (93%), Minolta Di550 laser printer (92%), D-Link DPR-1260 print server; or DGL-4300, DGL-4500, DIR-615, DIR-625, DIR-628, DIR-655, or DIR-855 WAP (91%), IBM BladeCenter management module, IBM System Storage TS3100/TS3200 Express Model tape library, or HP StorageWorks MSL2024 tape library (91%), Dell 1815dn printer (91%), VxWorks (91%), Bay Networks BayStack 450 switch (software version 3.1.0.22) (90%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   2.85 ms 192.168.1.105
+
+Nmap scan report for 192.168.1.110
+Host is up (0.0024s latency).
+Not shown: 65533 closed ports
+PORT      STATE SERVICE            VERSION
+2221/tcp  open  ssl/rockwell-csp1?
+44818/tcp open  EtherNet-IP-2
+| enip-info:
+|   type: CIP Motion Drive (37)
+|   vendor: Rockwell Automation/Allen-Bradley (1)
+|   productName: 2198-C1007-ERS
+|   serialNumber: 0x96500669
+|   productCode: 72
+|   revision: 13.4
+|   status: 0x0065
+|   state: 0x03
+|_  deviceIp: 192.168.1.110
+MAC Address: 40:41:01:E0:19:A6 (Unknown)
+No exact OS matches for host (If you know what OS is running on it, see https://nmap.org/submit/ ).
+TCP/IP fingerprint:
+OS:SCAN(V=7.80%E=4%D=12/1%OT=2221%CT=1%CU=35163%PV=Y%DS=1%DC=D%G=Y%M=404101
+OS:%TM=692DD61B%P=i686-pc-windows-windows)SEQ(SP=105%GCD=1%ISR=10A%TI=I%CI=
+OS:I%II=I%SS=S%TS=A)SEQ(SP=105%GCD=1%ISR=10B%TI=I%CI=I%II=I%TS=A)OPS(O1=M5B
+OS:4NW0NNT11%O2=M578NW0NNSNNT11%O3=M280NW0NNT11%O4=M5B4NW0NNSNNT11%O5=M218N
+OS:W0NNSNNT11%O6=M109NNSNNT11)WIN(W1=8218%W2=8220%W3=8204%W4=8218%W5=80F4%W
+OS:6=807A)ECN(R=Y%DF=N%T=40%W=832C%O=M5B4NW0NNS%CC=N%Q=)T1(R=Y%DF=N%T=40%S=
+OS:O%A=S+%F=AS%RD=0%Q=)T2(R=N)T3(R=N)T4(R=Y%DF=N%T=40%W=0%S=A%A=Z%F=R%O=%RD
+OS:=0%Q=)T5(R=Y%DF=N%T=40%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)T6(R=Y%DF=N%T=40%W=0
+OS:%S=A%A=Z%F=R%O=%RD=0%Q=)T7(R=Y%DF=N%T=40%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)U1
+OS:(R=Y%DF=N%T=FF%IPL=38%UN=0%RIPL=G%RID=G%RIPCK=G%RUCK=G%RUD=G)IE(R=Y%DFI=
+OS:N%T=FF%CD=S)
+
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   2.35 ms 192.168.1.110
+
+Nmap scan report for 192.168.1.150
+Host is up (0.0027s latency).
+Not shown: 65531 closed ports
+PORT      STATE SERVICE       VERSION
+80/tcp    open  http          B+W/0.1
+| fingerprint-strings:
+|   FourOhFourRequest, GetRequest:
+|     HTTP/1.1 200 OK
+|     Server: B+W/0.1
+|     Cache-Control: no-cache
+|     Content-Length: 441
+|     Content-Type: text/html; charset=utf-8
+|_    <head><title>AS-i Master Web Config</title><meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"><meta http-equiv="refresh" content="0; URL=/html/startreact.html" /><NOSCRIPT><H2>This interface uses JavaScript to basically do anything. Without JavaScript you cannot access any of the cool functions.</H2></NOSCRIPT></head><body>you are being redirected...<br/>if not, click <a href="/html/startreact.html">here</a></body>
+|_http-server-header: B+W/0.1
+|_http-title: AS-i Master Web Config
+443/tcp   open  ssl/https     B+W/0.1
+| fingerprint-strings:
+|   FourOhFourRequest, GetRequest:
+|     HTTP/1.1 200 OK
+|     Server: B+W/0.1
+|     Cache-Control: no-cache
+|     Content-Length: 441
+|     Content-Type: text/html; charset=utf-8
+|_    <head><title>AS-i Master Web Config</title><meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"><meta http-equiv="refresh" content="0; URL=/html/startreact.html" /><NOSCRIPT><H2>This interface uses JavaScript to basically do anything. Without JavaScript you cannot access any of the cool functions.</H2></NOSCRIPT></head><body>you are being redirected...<br/>if not, click <a href="/html/startreact.html">here</a></body>
+|_http-server-header: B+W/0.1
+|_http-title: AS-i Master Web Config
+|_http-trane-info: Problem with XML parsing of /evox/about
+| ssl-cert: Subject: commonName=192.168.1.150/organizationName=Bihl+Wiedemann GmbH/stateOrProvinceName=Baden-Wuerttemberg/countryName=DE
+| Subject Alternative Name: IP Address:192.168.1.150
+| Not valid before: 2018-01-01T00:00:00
+|_Not valid after:  2058-01-01T00:00:00
+44818/tcp open  EtherNet-IP-2
+| enip-info:
+|   type: Communications Adapter (12)
+|   vendor: Bihl & Wiedemann GmbH (645)
+|   productName: ASi EtherNet/IP Gateway
+|   serialNumber: 0x000af5a2
+|   productCode: 3849
+|   revision: 1.1
+|   status: 0x0030
+|   state: 0x03
+|_  deviceIp: 192.168.1.150
+58199/tcp open  ssl/unknown
+| ssl-cert: Subject: commonName=192.168.1.150/organizationName=Bihl+Wiedemann GmbH/stateOrProvinceName=Baden-Wuerttemberg/countryName=DE
+| Subject Alternative Name: IP Address:192.168.1.150
+| Not valid before: 2018-01-01T00:00:00
+|_Not valid after:  2058-01-01T00:00:00
+|_ssl-date: 2025-09-13T20:26:45+00:00; -78d21h26m42s from scanner time.
+2 services unrecognized despite returning data. If you know the service/version, please submit the following fingerprints at https://nmap.org/cgi-bin/submit.cgi?new-service :
+==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+SF-Port80-TCP:V=7.80%I=7%D=12/1%Time=692DD540%P=i686-pc-windows-windows%r(
+SF:GetRequest,233,"HTTP/1\.1\x20200\x20OK\r\nServer:\x20B\+W/0\.1\r\nCache
+SF:-Control:\x20no-cache\r\nContent-Length:\x20441\r\nContent-Type:\x20tex
+SF:t/html;\x20charset=utf-8\r\n\r\n<head><title>AS-i\x20Master\x20Web\x20C
+SF:onfig</title><meta\x20http-equiv=\"Content-Type\"\x20content=\"text/htm
+SF:l;\x20charset=iso-8859-1\"><meta\x20http-equiv=\"refresh\"\x20content=\
+SF:"0;\x20URL=/html/startreact\.html\"\x20/><NOSCRIPT><H2>This\x20interfac
+SF:e\x20uses\x20JavaScript\x20to\x20basically\x20do\x20anything\.\x20Witho
+SF:ut\x20JavaScript\x20you\x20cannot\x20access\x20any\x20of\x20the\x20cool
+SF:\x20functions\.</H2></NOSCRIPT></head><body>you\x20are\x20being\x20redi
+SF:rected\.\.\.<br/>if\x20not,\x20click\x20<a\x20href=\"/html/startreact\.
+SF:html\">here</a></body>\r\n")%r(FourOhFourRequest,233,"HTTP/1\.1\x20200\
+SF:x20OK\r\nServer:\x20B\+W/0\.1\r\nCache-Control:\x20no-cache\r\nContent-
+SF:Length:\x20441\r\nContent-Type:\x20text/html;\x20charset=utf-8\r\n\r\n<
+SF:head><title>AS-i\x20Master\x20Web\x20Config</title><meta\x20http-equiv=
+SF:\"Content-Type\"\x20content=\"text/html;\x20charset=iso-8859-1\"><meta\
+SF:x20http-equiv=\"refresh\"\x20content=\"0;\x20URL=/html/startreact\.html
+SF:\"\x20/><NOSCRIPT><H2>This\x20interface\x20uses\x20JavaScript\x20to\x20
+SF:basically\x20do\x20anything\.\x20Without\x20JavaScript\x20you\x20cannot
+SF:\x20access\x20any\x20of\x20the\x20cool\x20functions\.</H2></NOSCRIPT></
+SF:head><body>you\x20are\x20being\x20redirected\.\.\.<br/>if\x20not,\x20cl
+SF:ick\x20<a\x20href=\"/html/startreact\.html\">here</a></body>\r\n");
+==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+SF-Port443-TCP:V=7.80%T=SSL%I=7%D=12/1%Time=692DD546%P=i686-pc-windows-win
+SF:dows%r(GetRequest,233,"HTTP/1\.1\x20200\x20OK\r\nServer:\x20B\+W/0\.1\r
+SF:\nCache-Control:\x20no-cache\r\nContent-Length:\x20441\r\nContent-Type:
+SF:\x20text/html;\x20charset=utf-8\r\n\r\n<head><title>AS-i\x20Master\x20W
+SF:eb\x20Config</title><meta\x20http-equiv=\"Content-Type\"\x20content=\"t
+SF:ext/html;\x20charset=iso-8859-1\"><meta\x20http-equiv=\"refresh\"\x20co
+SF:ntent=\"0;\x20URL=/html/startreact\.html\"\x20/><NOSCRIPT><H2>This\x20i
+SF:nterface\x20uses\x20JavaScript\x20to\x20basically\x20do\x20anything\.\x
+SF:20Without\x20JavaScript\x20you\x20cannot\x20access\x20any\x20of\x20the\
+SF:x20cool\x20functions\.</H2></NOSCRIPT></head><body>you\x20are\x20being\
+SF:x20redirected\.\.\.<br/>if\x20not,\x20click\x20<a\x20href=\"/html/start
+SF:react\.html\">here</a></body>\r\n")%r(FourOhFourRequest,233,"HTTP/1\.1\
+SF:x20200\x20OK\r\nServer:\x20B\+W/0\.1\r\nCache-Control:\x20no-cache\r\nC
+SF:ontent-Length:\x20441\r\nContent-Type:\x20text/html;\x20charset=utf-8\r
+SF:\n\r\n<head><title>AS-i\x20Master\x20Web\x20Config</title><meta\x20http
+SF:-equiv=\"Content-Type\"\x20content=\"text/html;\x20charset=iso-8859-1\"
+SF:><meta\x20http-equiv=\"refresh\"\x20content=\"0;\x20URL=/html/startreac
+SF:t\.html\"\x20/><NOSCRIPT><H2>This\x20interface\x20uses\x20JavaScript\x2
+SF:0to\x20basically\x20do\x20anything\.\x20Without\x20JavaScript\x20you\x2
+SF:0cannot\x20access\x20any\x20of\x20the\x20cool\x20functions\.</H2></NOSC
+SF:RIPT></head><body>you\x20are\x20being\x20redirected\.\.\.<br/>if\x20not
+SF:,\x20click\x20<a\x20href=\"/html/startreact\.html\">here</a></body>\r\n
+SF:");
+MAC Address: 00:16:77:0D:B9:52 (Bihl + Wiedemann GmbH)
+No exact OS matches for host (If you know what OS is running on it, see https://nmap.org/submit/ ).
+TCP/IP fingerprint:
+OS:SCAN(V=7.80%E=4%D=12/1%OT=80%CT=1%CU=43494%PV=Y%DS=1%DC=D%G=Y%M=001677%T
+OS:M=692DD61B%P=i686-pc-windows-windows)SEQ(SP=66%GCD=1%ISR=83%CI=I%II=RI%T
+OS:S=U)SEQ(SP=5F%GCD=1%ISR=84%TI=RD%CI=I%II=RI%TS=U)SEQ(CI=I%II=RI)OPS(O1=M
+OS:400%O2=M400%O3=M400%O4=M400%O5=M400%O6=M400)WIN(W1=2000%W2=2000%W3=2000%
+OS:W4=2000%W5=2000%W6=2000)ECN(R=Y%DF=N%T=FF%W=2000%O=M400%CC=N%Q=)ECN(R=N)
+OS:T1(R=Y%DF=N%T=FF%S=O%A=S+%F=AS%RD=0%Q=)T1(R=N)T2(R=N)T3(R=Y%DF=N%T=FF%W=
+OS:2000%S=O%A=S+%F=AS%O=M400%RD=0%Q=)T3(R=N)T4(R=Y%DF=N%T=FF%W=2000%S=A%A=S
+OS:%F=AR%O=%RD=0%Q=)T5(R=Y%DF=N%T=FF%W=2000%S=A%A=S+%F=AR%O=%RD=0%Q=)T6(R=Y
+OS:%DF=N%T=FF%W=2000%S=A%A=S%F=AR%O=%RD=0%Q=)T7(R=Y%DF=N%T=FF%W=2000%S=A%A=
+OS:S+%F=AR%O=%RD=0%Q=)U1(R=Y%DF=N%T=FF%IPL=38%UN=0%RIPL=G%RID=G%RIPCK=G%RUC
+OS:K=G%RUD=G)IE(R=Y%DFI=S%T=FF%CD=S)
+
+Network Distance: 1 hop
+
+Host script results:
+|_clock-skew: -78d21h26m42s
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   2.71 ms 192.168.1.150
+
+Nmap scan report for 192.168.1.200
+Host is up (0.0019s latency).
+Not shown: 65532 closed ports
+PORT    STATE SERVICE  VERSION
+22/tcp  open  ssh      OpenSSH 7.6 (protocol 2.0)
+| ssh-hostkey:
+|_  2048 dc:8f:98:1b:db:e1:a7:4c:3c:fe:62:8d:c3:73:d9:af (RSA)
+80/tcp  open  http     lighttpd
+|_http-server-header: Embedded Web Server
+|_http-title: Did not follow redirect to https://192.168.1.200:443
+|_https-redirect: ERROR: Script execution failed (use -d to debug)
+443/tcp open  ssl/http lighttpd
+| ssl-cert: Subject: commonName=MCSESM-740BB052A8F2/organizationName=Schneider Electric/stateOrProvinceName=MASSACHUSETTS/countryName=us
+| Subject Alternative Name: DNS:MCSESM-740BB052A8F2
+| Not valid before: 2024-01-01T00:00:53
+|_Not valid after:  2026-12-31T00:00:53
+MAC Address: 74:0B:B0:52:A8:F2 (Unknown)
+Device type: general purpose
+Running: Linux 2.4.X
+OS CPE: cpe:/o:linux:linux_kernel:2.4.26
+OS details: Linux 2.4.26 (Slackware 10.0.0)
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   1.86 ms 192.168.1.200
+
+Nmap scan report for 192.168.1.201
+Host is up (0.0051s latency).
+All 65535 scanned ports on 192.168.1.201 are closed
+MAC Address: E4:8E:BB:93:3D:C0 (Unknown)
+Too many fingerprints match this host to give specific OS details
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   5.11 ms 192.168.1.201
+
+Nmap scan report for 192.168.1.202
+Host is up (0.0014s latency).
+Not shown: 65532 closed ports
+PORT    STATE SERVICE  VERSION
+22/tcp  open  ssh      OpenSSH 7.6 (protocol 2.0)
+| ssh-hostkey:
+|_  2048 70:54:2b:02:33:43:c6:99:bc:61:2a:ed:9b:1c:c5:84 (RSA)
+80/tcp  open  http     lighttpd
+|_http-server-header: Embedded Web Server
+|_http-title: Did not follow redirect to https://192.168.1.202:443
+|_https-redirect: ERROR: Script execution failed (use -d to debug)
+443/tcp open  ssl/http lighttpd
+| ssl-cert: Subject: commonName=MCSESM-740BB052A952/organizationName=Schneider Electric/stateOrProvinceName=MASSACHUSETTS/countryName=us
+| Subject Alternative Name: DNS:MCSESM-740BB052A952
+| Not valid before: 2024-01-01T00:00:30
+|_Not valid after:  2026-12-31T00:00:30
+MAC Address: 74:0B:B0:52:A9:52 (Unknown)
+Device type: general purpose
+Running: Linux 2.4.X
+OS CPE: cpe:/o:linux:linux_kernel:2.4.26
+OS details: Linux 2.4.26 (Slackware 10.0.0)
+Network Distance: 1 hop
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   1.37 ms 192.168.1.202
