@@ -33,7 +33,7 @@ import os
 PYTHON = sys.executable
 
 # CHANGE: Only start GUI - log_server.py removed
-# Backend (main.py) now logs directly to prt_system database via PRTDB.log_to_cart_logs()
+# Backend (main.py) now logs directly to prt_unified database via PRTDB.log_to_cart_logs()
 gui = subprocess.Popen([PYTHON, "run_gui.py"], cwd=os.path.dirname(__file__))
 
 try:

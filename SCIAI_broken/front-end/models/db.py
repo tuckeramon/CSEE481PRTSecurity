@@ -27,7 +27,7 @@ def load_config():
         "port": int(os.getenv("MYSQL_PORT", 3306)),
         "user": os.getenv("MYSQL_USER", "root"),
         "password": os.getenv("MYSQL_PASSWORD", "root"),
-        "database": os.getenv("MYSQL_DB", "prt_system")
+        "database": os.getenv("MYSQL_DB", "prt_unified")
     }
 
 # Connect to MySQL

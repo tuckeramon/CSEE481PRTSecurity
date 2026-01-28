@@ -11,7 +11,7 @@ def main():
             port=int(os.getenv("MYSQL_PORT", 3306)),
             user=os.getenv("MYSQL_USER", "root"),
             password=os.getenv("MYSQL_PASSWORD", "root"),
-            database=os.getenv("MYSQL_DB", "prt_system"),
+            database=os.getenv("MYSQL_DB", "prt_unified"),
             connection_timeout=5
         )
         print("✅ Connected successfully!")

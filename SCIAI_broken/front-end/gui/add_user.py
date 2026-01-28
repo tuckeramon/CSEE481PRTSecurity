@@ -47,7 +47,7 @@ class AddUser(QDialog):
                 host='localhost',
                 user='root',
                 password='root',
-                database='prt_system',
+                database='prt_unified',
                 charset='utf8mb4',
                 cursorclass=pymysql.cursors.DictCursor
             )
