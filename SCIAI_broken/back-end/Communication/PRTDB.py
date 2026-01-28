@@ -246,5 +246,53 @@ class PRTDB(Database):
         args = [(barcode, area)]
         return self.insert(query, args)
 
+    def fetch_pending_removal_commands(self):
+        """
+        Fetch all pending cart removal commands from PRTRemoveCart.
+        Called by main.py to poll for new removal requests from frontend.
+
+        Returns: List of dicts with 'id', 'barcode', 'area', 'timestamp'
+        """
+        query = """
+        SELECT id, barcode, area, timestamp
+        FROM PRTRemoveCart
+        ORDER BY timestamp ASC
+        """
+        return self.fetch(query, [])
+
+    def delete_removal_command(self, command_id: int):
+        """
+        Delete a removal command after it has been processed.
+        Called after successfully sending removal command to PLC.
+
+        :param command_id: The id of the PRTRemoveCart record to delete
+        """
+        query = """
+        DELETE FROM PRTRemoveCart
+        WHERE id = %s
+        """
+        return self.update(query, (command_id,))
+
+    def process_removal_command(self, command_id: int, barcode: str, area: int):
+        """
+        Process a removal command: log it and delete from pending.
+        Called by main.py after PLC acknowledges removal.
+
+        :param command_id: PRTRemoveCart.id
+        :param barcode: Cart barcode
+        :param area: Removal area
+        """
+        # Log to cart_logs for activity tracking
+        self.log_to_cart_logs(
+            cart_id=str(barcode).zfill(4),
+            position=f"Area_{area}",
+            event="Removed",
+            action_type="Removal"
+        )
+
+        # Delete the processed command
+        self.delete_removal_command(command_id)
+        print(f"Processed removal: cart {barcode} to area {area}")
+
 
 

@@ -1,15 +1,34 @@
-import requests
-from models.db import get_connection, remove_cart_request
-import datetime
-from flask import Flask, request, jsonify
+# api.py
+"""
+Frontend API module - Direct database access for cart commands
 
-app = Flask(__name__)
+CHANGE: Removed HTTP-based communication to backend Server.py
+OLD: Used requests.post() to send commands to localhost:2650
+NEW: Writes directly to database tables that backend polls
+
+Architecture:
+- send_cart_to_station() -> Updates PRTCarts.destination directly
+- remove_cart() -> Inserts into PRTRemoveCart table
+
+Backend (main.py) reads from these tables:
+- PRTCarts: Read when PLC requests routing info for a cart
+- PRTRemoveCart: Polled for new removal commands
+"""
+
+from models.db import (
+    update_cart_destination,
+    insert_remove_cart_command,
+    log_event
+)
 
 
-@app.route('/prt/dest', methods=['POST'])
 def send_cart_to_station(cart_id, station_id):
     """
-    Send a request to the API to move a cart to a specific station.
+    Update cart destination directly in database.
+    Backend will read this when PLC requests routing info.
+
+    :param cart_id: Cart barcode (e.g., "0001")
+    :param station_id: Station name (e.g., "Station_1")
     """
     station_map = {
         "Station_1": 1,
@@ -18,57 +37,42 @@ def send_cart_to_station(cart_id, station_id):
         "Station_4": 4
     }
     destination = station_map.get(station_id)
-    api_url = "http://localhost:2650/prt/dest"
-    payload = {
-        "barcode": cart_id,
-        "destination": destination
-    }
 
-    try:
-        response = requests.post(api_url, json=payload)
-        if response.status_code == 200:
-            conn = get_connection()
-            cursor = conn.cursor()
+    if destination is None:
+        print(f"Invalid station: {station_id}")
+        return False
 
-            query = """
-                INSERT INTO cart_logs (cart_id, position, event, time_stamp)
-                VALUES (%s, %s, %s, %s)"""
-            data = (cart_id, station_id, 'sent', datetime.datetime.now())
-            cursor.execute(query, data)
-            conn.commit()
+    # Update destination in PRTCarts table
+    success = update_cart_destination(cart_id, destination)
 
-            cursor.close()
-            conn.close()
-        else:
-            conn = get_connection()
-            cursor = conn.cursor()
+    # Log the action to cart_logs for activity tracking
+    if success:
+        log_event(cart_id, station_id, "Destination Updated", "Command")
+        print(f"Cart {cart_id} destination set to {station_id}")
+    else:
+        log_event(cart_id, station_id, "Update Failed", "Error")
+        print(f"Failed to update cart {cart_id} destination")
 
-            query = """
-                INSERT INTO cart_logs (cart_id, position, event, time_stamp)
-                VALUES (%s, %s, %s, %s)"""
-            data = (cart_id, station_id, 'error', datetime.datetime.now())
-            cursor.execute(query, data)
-            conn.commit()
+    return success
 
-            cursor.close()
-            conn.close()
-    except requests.RequestException as e:
-        print(f"Error connecting to API: {e}")
 
-@app.route('/prt/remove', methods=['POST'])
 def remove_cart(cart_id, area):
     """
-    Remove a cart from the conveyor system.
+    Insert cart removal command into database.
+    Backend will poll PRTRemoveCart and process the command.
+
+    :param cart_id: Cart barcode (e.g., "0001")
+    :param area: Removal area number (5-9)
     """
-    api_url = "http://localhost:2650/prt/remove"
-    payload = {
-        "barcode": cart_id,
-        "area": area
-    }
-    try:
-        response = requests.post(api_url, json=payload)
-        if response.status_code == 200:
-            remove_cart_request(cart_id, area)
-    except requests.RequestException as e:
-        print(f"Error connecting to API: {e}")
-        
+    # Insert removal command into PRTRemoveCart table
+    success = insert_remove_cart_command(cart_id, area)
+
+    # Log the action to cart_logs for activity tracking
+    if success:
+        log_event(cart_id, f"Remove_Area_{area}", "Removal Requested", "Command")
+        print(f"Cart {cart_id} removal requested to area {area}")
+    else:
+        log_event(cart_id, f"Remove_Area_{area}", "Removal Failed", "Error")
+        print(f"Failed to request removal for cart {cart_id}")
+
+    return success

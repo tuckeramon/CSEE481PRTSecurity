@@ -250,3 +250,59 @@ def fetch_all_carts():
     except Exception as e:
         print(f"Error fetching all carts: {e}")
         return []
+
+def update_cart_destination(barcode, destination):
+    """
+    Update cart destination directly in PRTCarts table.
+    Backend will read this when PLC requests routing info.
+
+    :param barcode: Cart barcode (e.g., "0001")
+    :param destination: Station number (1-4)
+    :return: True on success, False on failure
+    """
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE PRTCarts SET destination = %s WHERE barcode = %s",
+            (destination, barcode)
+        )
+        affected = cursor.rowcount
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        if affected > 0:
+            print(f"Updated destination for cart {barcode} to station {destination}")
+            return True
+        else:
+            print(f"Cart {barcode} not found in PRTCarts")
+            return False
+    except Exception as e:
+        print(f"Error updating cart destination: {e}")
+        return False
+
+def insert_remove_cart_command(barcode, area):
+    """
+    Insert removal command into PRTRemoveCart table.
+    Backend will poll this table and process removal requests.
+
+    :param barcode: Cart barcode (e.g., "0001")
+    :param area: Removal area (5-9)
+    :return: True on success, False on failure
+    """
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO PRTRemoveCart (barcode, area) VALUES (%s, %s)",
+            (barcode, area)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print(f"Inserted removal command for cart {barcode} to area {area}")
+        return True
+    except Exception as e:
+        print(f"Error inserting removal command: {e}")
+        return False

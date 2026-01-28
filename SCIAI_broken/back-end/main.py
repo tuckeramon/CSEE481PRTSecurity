@@ -6,8 +6,7 @@ from PRTConfig import TAG_TO_READ, STATUS_BIT, TAG_TO_WRITE, prt_get_dest_route
 from Communication.PLCConfig import PRT_PLC_IP_ADDRESS
 from PRTPLC import PRTPLC
 from PRTConfig import BARCODE_DESTINATION_MAP
-from Server import Server
-from threading import Thread
+# Server and threading imports removed - now using direct database polling instead of HTTP
 
 # Data Logger
 logger = DataLogger('datalogs', 'dataplots')
@@ -16,6 +15,9 @@ SAVE_INTERVAL = 60
 
 # Watchdog interval (seconds)
 WATCHDOG_INTERVAL = 2
+
+# Removal command poll interval (seconds)
+REMOVAL_POLL_INTERVAL = 1
 
 # PRT PLC
 prt = None
@@ -30,6 +32,12 @@ prt = None
 # 3. Direct cart_logs population - PRTDB now writes activity logs automatically
 # 4. Eliminated HTTP logging layer - no more log_server.py or WebRequester classes
 #
+# ARCHITECTURE CHANGE: Removed HTTP Server (Server.py)
+# OLD: Frontend sent HTTP POST to localhost:2650 to update destinations/removals
+# NEW: Frontend writes directly to database tables, backend polls for changes
+# - PRTCarts: Frontend updates destination, backend reads when PLC requests routing
+# - PRTRemoveCart: Frontend inserts commands, backend polls and processes
+#
 # Database contains both:
 # - PRT tables (PRTSorterRequest, PRTSorterResponse, PRTSorterReport, PRTCarts, PRTRemoveCart)
 # - Frontend tables (users, cart_logs)
@@ -40,7 +48,6 @@ config = {
     'database': 'prt_unified'  # NEW database - won't affect existing prtdb or prt_system
 }
 prtdb = PRTDB(config)
-server = None
 
 def get_destination(barcode: str, sorter_num: int):
     print(f"GET_DEST: barcode: {barcode}, sorter_num: {sorter_num}")
@@ -66,23 +73,42 @@ def process_barcode(barcode: str):
 
 def initialize_system():
     print(f"PRT_PLC: Connecting to PLC: {PRT_PLC_IP_ADDRESS}...")
-    global prt, server
+    global prt
     prt = PRTPLC()
-    # Create the Flask server with the connected PLC instance
-    server = Server(prtdb, prt)
+    # HTTP Server removed - frontend now writes directly to database
+    # Backend polls PRTRemoveCart for removal commands
     prt.write_tag(f'SORTER_1_REQUEST.END', 0)
     prt.write_tag(f'SORTER_2_REQUEST.END', 0)
     prt.write_tag(f'SORTER_1_REPORT.END', 0)
     prt.write_tag(f'SORTER_2_REPORT.END', 0)
     prt.send_watchdog_signal()
-    flask_thread = Thread(target=server.start_flask_server)
-    flask_thread.daemon = True
-    flask_thread.start()
+    print("System initialized - polling database for commands...")
+
+def process_removal_commands():
+    """
+    Poll PRTRemoveCart table for pending removal commands from frontend.
+    Process each command by updating cart destination and notifying PLC.
+    """
+    commands = prtdb.fetch_pending_removal_commands()
+    for cmd in commands:
+        command_id = cmd['id']
+        barcode = cmd['barcode']
+        area = cmd['area']
+        print(f"Processing removal command: cart {barcode} to area {area}")
+
+        # Update cart destination to the removal area
+        # Areas 5-9 are removal/unload areas
+        prtdb.update_destination_info(barcode, area)
+
+        # Mark command as processed (deletes from PRTRemoveCart, logs to cart_logs)
+        prtdb.process_removal_command(command_id, barcode, area)
+
 
 def run_system():
     initialize_system()
     LAST_SAVE_TIME = time()
     LAST_WATCHDOG_TIME = time()
+    LAST_REMOVAL_POLL_TIME = time()
     while (True):
         process_sorter(1)
         process_sorter(2)
@@ -93,6 +119,10 @@ def run_system():
         if current_time - LAST_WATCHDOG_TIME >= WATCHDOG_INTERVAL:
             prt.send_watchdog_signal()
             LAST_WATCHDOG_TIME = current_time
+        # Poll for removal commands from frontend
+        if current_time - LAST_REMOVAL_POLL_TIME >= REMOVAL_POLL_INTERVAL:
+            process_removal_commands()
+            LAST_REMOVAL_POLL_TIME = current_time
 
 def process_sorter(sorter_num: int):
     sorter_request = prt.read_sorter_request(sorter_num)
