@@ -11,7 +11,10 @@ load_dotenv()
 ALLOWED_POSITIONS = {
     'Station_1', 'Station_2', 'Station_3', 'Station_4',
     'Segment_A', 'Segment_B', 'Segment_C', 'Segment_D',
-    'Segment_E', 'Segment_F'
+    'Segment_E', 'Segment_F',
+    # Removal/unload areas (used when removing carts from system)
+    'Remove_Area_5', 'Remove_Area_6', 'Remove_Area_7',
+    'Remove_Area_8', 'Remove_Area_9'
 }
 EVENT_MAP = {
     "0000": "Not Diverted",

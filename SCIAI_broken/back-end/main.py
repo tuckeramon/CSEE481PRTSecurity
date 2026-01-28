@@ -1,17 +1,12 @@
 from time import time, sleep
 from Communication.PLC import PLC
 from Communication.PRTDB import PRTDB
-from DataCollection.DataLogger import DataLogger
 from PRTConfig import TAG_TO_READ, STATUS_BIT, TAG_TO_WRITE, prt_get_dest_route
 from Communication.PLCConfig import PRT_PLC_IP_ADDRESS
 from PRTPLC import PRTPLC
 from PRTConfig import BARCODE_DESTINATION_MAP
 # Server and threading imports removed - now using direct database polling instead of HTTP
-
-# Data Logger
-logger = DataLogger('datalogs', 'dataplots')
-# Data save interval (seconds), last save time
-SAVE_INTERVAL = 60
+# DataLogger import removed - logging now done via cart_logs table in database
 
 # Watchdog interval (seconds)
 WATCHDOG_INTERVAL = 2
@@ -106,16 +101,12 @@ def process_removal_commands():
 
 def run_system():
     initialize_system()
-    LAST_SAVE_TIME = time()
     LAST_WATCHDOG_TIME = time()
     LAST_REMOVAL_POLL_TIME = time()
     while (True):
         process_sorter(1)
         process_sorter(2)
         current_time = time()
-        if current_time - LAST_SAVE_TIME >= SAVE_INTERVAL:
-            logger.save_log("PRT")
-            LAST_SAVE_TIME = current_time
         if current_time - LAST_WATCHDOG_TIME >= WATCHDOG_INTERVAL:
             prt.send_watchdog_signal()
             LAST_WATCHDOG_TIME = current_time
