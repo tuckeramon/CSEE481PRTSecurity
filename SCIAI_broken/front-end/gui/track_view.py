@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtGui import QPainter, QColor, QPen, QPainterPath
 from PyQt5.QtCore import Qt, pyqtSignal, QTimer
-from models.db import fetch_activity_logs
+from models.db import fetch_all_carts
 import math
 
 # Logical order of stops (segments and stations)
@@ -84,19 +84,15 @@ class TrackView(QWidget):
         self.update()
 
     def update_carts_from_logs(self):
-        logs = fetch_activity_logs(100)
-        cart_dict = {}
-        for log in logs:
-            cart_id = log["cart_id"]
-            if cart_id not in cart_dict or log["time_stamp"] > cart_dict[cart_id]["time_stamp"]:
-                cart_dict[cart_id] = log
+        # Fetch all carts from PRTCarts with their latest positions from cart_logs
+        all_carts = fetch_all_carts()
         carts = []
-        for cart_id, log in cart_dict.items():
+        for cart in all_carts:
             carts.append({
-                "id": cart_id,
-                "position": log["position"],
-                "status": log["event"],
-                "log_time": log["time_stamp"].timestamp() if hasattr(log["time_stamp"], "timestamp") else 0
+                "id": cart["cart_id"],
+                "position": cart["position"],
+                "status": cart["event"],
+                "log_time": cart["time_stamp"].timestamp() if cart["time_stamp"] and hasattr(cart["time_stamp"], "timestamp") else 0
             })
         self.set_carts(carts)
 

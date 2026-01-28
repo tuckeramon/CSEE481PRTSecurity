@@ -85,17 +85,47 @@ def get_cart_info(cart_id):
     try:
         conn = get_connection()
         cursor = conn.cursor()
+
+        # First check cart_logs for activity
         cursor.execute(
             "SELECT * FROM cart_logs WHERE cart_id = %s ORDER BY time_stamp DESC LIMIT 1",
             (cart_id,)
         )
-        result = cursor.fetchone()
+        log_result = cursor.fetchone()
+
+        # Also get cart info from PRTCarts (master data)
+        cursor.execute(
+            "SELECT barcode, destination FROM PRTCarts WHERE barcode = %s",
+            (cart_id,)
+        )
+        cart_result = cursor.fetchone()
+
         cursor.close()
         conn.close()
-        print(f"📋 Cart info for {cart_id}: {result}")
-        return result
+
+        if log_result:
+            # Return log data with destination from PRTCarts
+            result = log_result
+            if cart_result:
+                result['destination'] = cart_result['destination']
+            print(f"Cart info for {cart_id}: {result}")
+            return result
+        elif cart_result:
+            # No log entry, but cart exists in PRTCarts - return default info
+            result = {
+                'cart_id': cart_result['barcode'],
+                'position': 'Segment_A',
+                'event_type': 'Idle',
+                'time_stamp': 'No activity yet',
+                'destination': cart_result['destination']
+            }
+            print(f"Cart info for {cart_id} (from PRTCarts): {result}")
+            return result
+        else:
+            print(f"Cart {cart_id} not found")
+            return None
     except Exception as e:
-        print(f"❌ Error fetching cart info: {e}")
+        print(f"Error fetching cart info: {e}")
         return None
 
 def remove_cart_request(cart_id, area):
@@ -168,14 +198,55 @@ def fetch_filtered_logs(cart_id=None, position=None, since_time=None):
         return []
     
 def fetch_all_cart_ids():
+    """Fetch all cart IDs from PRTCarts (master cart list)."""
     try:
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT DISTINCT cart_id FROM cart_logs ORDER BY cart_id")
+        cursor.execute("SELECT barcode FROM PRTCarts ORDER BY barcode")
         rows = cursor.fetchall()
         cursor.close()
         conn.close()
-        return [row['cart_id'] for row in rows]
+        return [row['barcode'] for row in rows]
     except Exception as e:
         print(f"Error fetching all cart IDs: {e}")
+        return []
+
+def fetch_all_carts():
+    """Fetch all carts from PRTCarts with their latest position from cart_logs."""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        # Get all carts from PRTCarts
+        cursor.execute("SELECT barcode, destination FROM PRTCarts ORDER BY barcode")
+        carts = cursor.fetchall()
+
+        # Get latest position for each cart from cart_logs
+        result = []
+        for cart in carts:
+            barcode = cart['barcode']
+            cursor.execute(
+                """
+                SELECT position, event, time_stamp
+                FROM cart_logs
+                WHERE cart_id = %s
+                ORDER BY time_stamp DESC
+                LIMIT 1
+                """,
+                (barcode,)
+            )
+            log = cursor.fetchone()
+
+            result.append({
+                'cart_id': barcode,
+                'destination': cart['destination'],
+                'position': log['position'] if log else 'Segment_A',
+                'event': log['event'] if log else 'Idle',
+                'time_stamp': log['time_stamp'] if log else None
+            })
+
+        cursor.close()
+        conn.close()
+        return result
+    except Exception as e:
+        print(f"Error fetching all carts: {e}")
         return []
