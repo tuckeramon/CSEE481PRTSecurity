@@ -1,4 +1,5 @@
 from flask import jsonify
+import json
 
 from Communication.Database import Database
 
@@ -293,6 +294,299 @@ class PRTDB(Database):
         # Delete the processed command
         self.delete_removal_command(command_id)
         print(f"Processed removal: cart {barcode} to area {area}")
+
+    # =========================================================================
+    # PLC SECURITY LOGGING METHODS
+    # For tracking security-relevant events from Rockwell Logix PLCs
+    # =========================================================================
+
+    # Severity levels for security events
+    SEVERITY_INFO = "INFO"
+    SEVERITY_WARNING = "WARNING"
+    SEVERITY_ERROR = "ERROR"
+    SEVERITY_CRITICAL = "CRITICAL"
+
+    # Event types for categorization
+    EVENT_FAULT = "FAULT"
+    EVENT_MODE_CHANGE = "MODE_CHANGE"
+    EVENT_CONNECTION = "CONNECTION"
+    EVENT_STATUS = "STATUS"
+    EVENT_CONFIG_CHANGE = "CONFIG_CHANGE"
+    EVENT_BASELINE_DEVIATION = "BASELINE_DEVIATION"
+
+    def log_plc_security_event(
+        self,
+        plc_ip: str,
+        event_type: str,
+        event_message: str,
+        severity: str = "INFO",
+        plc_name: str = None,
+        plc_serial: str = None,
+        event_code: str = None,
+        previous_state: str = None,
+        current_state: str = None,
+        raw_data: dict = None,
+        plc_timestamp: str = None
+    ):
+        """
+        Log a security-relevant event from a PLC to the PLCSecurityLogs table.
+
+        :param plc_ip: IP address of the PLC
+        :param event_type: Category (FAULT, MODE_CHANGE, CONNECTION, STATUS, CONFIG_CHANGE)
+        :param event_message: Human-readable description of the event
+        :param severity: INFO, WARNING, ERROR, or CRITICAL
+        :param plc_name: Controller name from PLC
+        :param plc_serial: Serial number for device verification
+        :param event_code: Fault code or event identifier
+        :param previous_state: Previous state (for change events)
+        :param current_state: Current state
+        :param raw_data: Dictionary of raw PLC data (stored as JSON)
+        :param plc_timestamp: Timestamp from PLC if available
+
+        :return: Number of rows inserted (1 on success, 0 on failure)
+        """
+        query = """
+        INSERT INTO PLCSecurityLogs
+            (plc_ip, plc_name, plc_serial, event_type, severity, event_code,
+             event_message, previous_state, current_state, raw_data, plc_timestamp)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        raw_json = json.dumps(raw_data) if raw_data else None
+        args = [(
+            plc_ip, plc_name, plc_serial, event_type, severity, event_code,
+            event_message, previous_state, current_state, raw_json, plc_timestamp
+        )]
+        try:
+            result = self.insert(query, args)
+            if severity in [self.SEVERITY_ERROR, self.SEVERITY_CRITICAL]:
+                print(f"SECURITY [{severity}] {plc_ip}: {event_message}")
+            return result
+        except Exception as e:
+            print(f"Error logging PLC security event: {e}")
+            return 0
+
+    def get_plc_baseline(self, plc_ip: str):
+        """
+        Get the expected baseline configuration for a PLC.
+        Used to detect unauthorized changes.
+
+        :param plc_ip: IP address of the PLC
+        :return: Baseline dict or None if not found
+        """
+        query = """
+        SELECT * FROM PLCBaseline WHERE plc_ip = %s
+        """
+        result = self.fetch(query, [plc_ip])
+        if result:
+            return result[0]
+        return None
+
+    def set_plc_baseline(
+        self,
+        plc_ip: str,
+        plc_name: str = None,
+        plc_serial: str = None,
+        firmware_version: str = None,
+        product_type: str = None,
+        expected_mode: str = "Run"
+    ):
+        """
+        Set or update the expected baseline configuration for a PLC.
+        Call this after initial setup to establish the "known good" state.
+
+        :param plc_ip: IP address of the PLC
+        :param plc_name: Expected controller name
+        :param plc_serial: Expected serial number
+        :param firmware_version: Expected firmware version
+        :param product_type: Expected product type
+        :param expected_mode: Expected operating mode (Run, Program, Remote)
+
+        :return: Number of rows affected
+        """
+        query = """
+        INSERT INTO PLCBaseline
+            (plc_ip, plc_name, plc_serial, firmware_version, product_type, expected_mode)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            plc_name = VALUES(plc_name),
+            plc_serial = VALUES(plc_serial),
+            firmware_version = VALUES(firmware_version),
+            product_type = VALUES(product_type),
+            expected_mode = VALUES(expected_mode),
+            updated_at = CURRENT_TIMESTAMP
+        """
+        args = [(plc_ip, plc_name, plc_serial, firmware_version, product_type, expected_mode)]
+        return self.insert(query, args)
+
+    def get_recent_security_logs(self, plc_ip: str = None, limit: int = 100, severity: str = None):
+        """
+        Retrieve recent security logs, optionally filtered by PLC or severity.
+
+        :param plc_ip: Filter by PLC IP (None for all PLCs)
+        :param limit: Maximum number of logs to return
+        :param severity: Filter by severity level (None for all)
+        :return: List of log entries
+        """
+        query = "SELECT * FROM PLCSecurityLogs WHERE 1=1"
+        args = []
+
+        if plc_ip:
+            query += " AND plc_ip = %s"
+            args.append(plc_ip)
+
+        if severity:
+            query += " AND severity = %s"
+            args.append(severity)
+
+        query += " ORDER BY timestamp DESC LIMIT %s"
+        args.append(limit)
+
+        return self.fetch(query, args)
+
+    def get_security_alerts(self, hours: int = 24):
+        """
+        Get security alerts (WARNING, ERROR, CRITICAL) from the last N hours.
+        Useful for dashboard displays and alerting.
+
+        :param hours: Number of hours to look back
+        :return: List of alert entries
+        """
+        query = """
+        SELECT * FROM PLCSecurityLogs
+        WHERE severity IN ('WARNING', 'ERROR', 'CRITICAL')
+        AND timestamp >= DATE_SUB(NOW(), INTERVAL %s HOUR)
+        ORDER BY timestamp DESC
+        """
+        return self.fetch(query, [hours])
+
+    # =========================================================================
+    # WAZUH ALERT STORAGE METHODS
+    # For storing correlated/enriched alerts from the Wazuh SIEM manager.
+    # These are DISTINCT from PLCSecurityLogs (raw events from PLCSecurityMonitor).
+    # =========================================================================
+
+    def store_wazuh_alert(
+        self,
+        wazuh_alert_id: str,
+        wazuh_rule_id: str,
+        wazuh_rule_level: int,
+        wazuh_rule_description: str,
+        wazuh_rule_groups: str = None,
+        agent_id: str = None,
+        agent_name: str = None,
+        agent_ip: str = None,
+        plc_ip: str = None,
+        event_type: str = None,
+        severity: str = None,
+        event_message: str = None,
+        previous_state: str = None,
+        current_state: str = None,
+        raw_alert: str = None,
+        wazuh_timestamp=None
+    ):
+        """
+        Store a Wazuh alert in the PLCSecurityAlerts table.
+
+        Uses INSERT IGNORE to safely handle duplicate alert IDs
+        (the wazuh_alert_id column has a UNIQUE index).
+
+        :param wazuh_alert_id: Unique alert identifier (timestamp_ruleId_agentId)
+        :param wazuh_rule_id: Wazuh rule ID that triggered (e.g., "100021")
+        :param wazuh_rule_level: Wazuh severity level (0-15)
+        :param wazuh_rule_description: Description from the rule definition
+        :param wazuh_rule_groups: Comma-separated rule groups
+        :param agent_id: Wazuh agent ID
+        :param agent_name: Wazuh agent name
+        :param agent_ip: Wazuh agent IP
+        :param plc_ip: PLC IP from original event data
+        :param event_type: Event type from original event
+        :param severity: Severity from original event
+        :param event_message: Message from original event
+        :param previous_state: Previous state from original event
+        :param current_state: Current state from original event
+        :param raw_alert: Full Wazuh alert as JSON string
+        :param wazuh_timestamp: Datetime when Wazuh generated the alert
+        :return: Number of rows inserted (1 on success, 0 if duplicate)
+        """
+        query = """
+        INSERT IGNORE INTO PLCSecurityAlerts
+            (wazuh_alert_id, wazuh_rule_id, wazuh_rule_level, wazuh_rule_description,
+             wazuh_rule_groups, agent_id, agent_name, agent_ip,
+             plc_ip, event_type, severity, event_message,
+             previous_state, current_state, raw_alert, wazuh_timestamp)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        args = [(
+            wazuh_alert_id, wazuh_rule_id, wazuh_rule_level, wazuh_rule_description,
+            wazuh_rule_groups, agent_id, agent_name, agent_ip,
+            plc_ip, event_type, severity, event_message,
+            previous_state, current_state, raw_alert, wazuh_timestamp
+        )]
+        try:
+            return self.insert(query, args)
+        except Exception as e:
+            print(f"Error storing Wazuh alert: {e}")
+            return 0
+
+    def get_recent_wazuh_alerts(
+        self,
+        plc_ip: str = None,
+        min_level: int = None,
+        event_type: str = None,
+        acknowledged: bool = None,
+        limit: int = 100
+    ):
+        """
+        Retrieve recent Wazuh alerts with optional filters.
+
+        :param plc_ip: Filter by PLC IP address (None for all)
+        :param min_level: Minimum Wazuh rule level 0-15 (None for all)
+        :param event_type: Filter by event type (MODE_CHANGE, FAULT, etc.)
+        :param acknowledged: Filter by acknowledgement status (True/False/None)
+        :param limit: Maximum number of alerts to return
+        :return: List of alert dictionaries
+        """
+        query = "SELECT * FROM PLCSecurityAlerts WHERE 1=1"
+        args = []
+
+        if plc_ip:
+            query += " AND plc_ip = %s"
+            args.append(plc_ip)
+
+        if min_level is not None:
+            query += " AND wazuh_rule_level >= %s"
+            args.append(min_level)
+
+        if event_type:
+            query += " AND event_type = %s"
+            args.append(event_type)
+
+        if acknowledged is not None:
+            query += " AND acknowledged = %s"
+            args.append(1 if acknowledged else 0)
+
+        query += " ORDER BY wazuh_timestamp DESC LIMIT %s"
+        args.append(limit)
+
+        return self.fetch(query, args)
+
+    def acknowledge_alert(self, alert_id: int, acknowledged_by: str = None):
+        """
+        Mark a Wazuh alert as acknowledged by an operator.
+
+        :param alert_id: The PLCSecurityAlerts.id of the alert to acknowledge
+        :param acknowledged_by: Username or identifier of who acknowledged it
+        :return: Number of rows updated (1 on success, 0 if not found)
+        """
+        query = """
+        UPDATE PLCSecurityAlerts
+        SET acknowledged = 1,
+            acknowledged_by = %s,
+            acknowledged_at = NOW()
+        WHERE id = %s AND acknowledged = 0
+        """
+        args = (acknowledged_by, alert_id)
+        return self.update(query, args)
 
 
 

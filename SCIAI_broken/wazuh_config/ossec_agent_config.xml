@@ -1,0 +1,130 @@
+<!--
+  Wazuh Agent Configuration for PLC Security Monitoring
+
+  PURPOSE:
+  This configuration tells the Wazuh agent how to:
+  1. Monitor the PLC security JSON log file
+  2. Parse the JSON format correctly
+  3. Forward events to the Wazuh manager for analysis
+
+  INSTALLATION STEPS:
+  1. Install Wazuh agent on the machine running the PLC backend
+     - Windows: Download from https://documentation.wazuh.com/current/installation-guide/
+     - Linux: apt-get install wazuh-agent
+
+  2. Add this localfile block to the agent configuration:
+     - Windows: C:\Program Files (x86)\ossec-agent\ossec.conf
+     - Linux: /var/ossec/etc/ossec.conf
+
+  3. Restart the agent:
+     - Windows: Restart-Service WazuhSvc
+     - Linux: systemctl restart wazuh-agent
+
+  4. Copy plc_security_rules.xml to the Wazuh manager:
+     - /var/ossec/etc/rules/plc_security_rules.xml
+
+  5. Restart the Wazuh manager:
+     - systemctl restart wazuh-manager
+
+  LOG FILE MONITORING EXPLAINED:
+  - location: Path to the JSON log file (update to match your setup)
+  - log_format: "json" tells Wazuh to parse as JSON
+  - label: Adds metadata to help with rule matching
+-->
+
+<!-- ================================================================
+     ADD THIS BLOCK TO YOUR ossec.conf FILE
+     Location varies by OS - see installation steps above
+     ================================================================ -->
+
+<ossec_config>
+
+  <!-- ================================================================
+       PLC Security Log File Monitoring
+       This tells the agent to watch our JSON log file
+       ================================================================ -->
+  <localfile>
+    <!-- Path to the PLC security JSON log file
+         UPDATE THIS PATH to match your actual installation:
+         - Windows example: C:\path\to\SCIAI_broken\back-end\logs\plc_security\plc_security.json
+         - Linux example: /opt/prt/back-end/logs/plc_security/plc_security.json
+    -->
+    <location>C:\Users\tucke\Documents\GitHub\CSEE481PRTSecurity\SCIAI_broken\back-end\logs\plc_security\plc_security.json</location>
+
+    <!-- Parse as JSON - Wazuh will extract all fields automatically -->
+    <log_format>json</log_format>
+
+    <!-- Add a label to identify events from this source -->
+    <label key="source_type">plc_security</label>
+    <label key="environment">industrial</label>
+  </localfile>
+
+  <!-- ================================================================
+       Optional: Real-time monitoring (more responsive but uses more CPU)
+       Enable this for faster alerting on critical events
+       ================================================================ -->
+  <!--
+  <localfile>
+    <location>C:\path\to\logs\plc_security\plc_security.json</location>
+    <log_format>json</log_format>
+    <frequency>5</frequency>
+  </localfile>
+  -->
+
+</ossec_config>
+
+<!--
+  ================================================================
+  WAZUH MANAGER CONFIGURATION
+  Add this to /var/ossec/etc/ossec.conf on the Wazuh manager
+  ================================================================
+
+  <ossec_config>
+    <remote>
+      <connection>secure</connection>
+      <port>1514</port>
+      <protocol>tcp</protocol>
+    </remote>
+
+    <rules>
+      <include>plc_security_rules.xml</include>
+    </rules>
+  </ossec_config>
+-->
+
+<!--
+  ================================================================
+  TESTING YOUR CONFIGURATION
+
+  1. Check agent connectivity:
+     Windows: "C:\Program Files (x86)\ossec-agent\agent-auth.exe" -m MANAGER_IP
+     Linux: /var/ossec/bin/agent-auth -m MANAGER_IP
+
+  2. Verify log file is being read:
+     Windows: Check C:\Program Files (x86)\ossec-agent\ossec.log
+     Linux: tail -f /var/ossec/logs/ossec.log
+
+  3. Test with a manual log entry:
+     Add this line to plc_security.json:
+     {"timestamp":"2024-01-15T12:00:00","source":"plc_security","plc_ip":"192.168.1.51","event_type":"MODE_CHANGE","severity":"WARNING","message":"Test event"}
+
+  4. Check Wazuh dashboard for the alert
+
+  ================================================================
+  EDUCATIONAL EXERCISES
+
+  Exercise 1: Trigger a mode change alert
+  - Modify the PLC mode (if you have access)
+  - Or manually add a MODE_CHANGE log entry
+  - Observe the alert in Wazuh dashboard
+
+  Exercise 2: Simulate an attack pattern
+  - Add multiple connection failure events rapidly
+  - Watch for the correlation rule (100100) to trigger
+
+  Exercise 3: Create a custom rule
+  - Add a new rule in plc_security_rules.xml
+  - Create a log event that matches your rule
+  - Verify the alert appears
+  ================================================================
+-->

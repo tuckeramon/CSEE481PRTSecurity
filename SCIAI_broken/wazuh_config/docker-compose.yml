@@ -1,0 +1,61 @@
+# Wazuh Manager - Standalone Configuration (No Indexer, No Dashboard)
+#
+# Runs ONLY the Wazuh manager in Docker. The manager receives events from
+# the Wazuh agent on the host, applies correlation rules (plc_security_rules.xml),
+# and writes alerts to alerts.json.
+#
+# The alerts directory is volume-mounted to C:\wazuh-alerts on the host so the
+# AlertIngester in the Python backend can read alerts.json directly.
+#
+# PREREQUISITES:
+#   1. Docker Desktop with WSL2 backend (Windows)
+#   2. Create the host alerts directory:  mkdir C:\wazuh-alerts
+#   3. Wazuh agent installed on the host machine
+#
+# USAGE:
+#   cd SCIAI_broken\wazuh_config
+#   docker compose up -d
+#
+# VERIFY:
+#   docker compose logs -f wazuh-manager
+#
+# AGENT CONFIGURATION:
+#   Point the Wazuh agent at this manager by setting in ossec.conf:
+#     <server>
+#       <address>127.0.0.1</address>
+#       <port>1514</port>
+#       <protocol>tcp</protocol>
+#     </server>
+
+services:
+  wazuh-manager:
+    image: wazuh/wazuh-manager:4.9.0
+    container_name: wazuh-manager
+    hostname: wazuh-manager
+    restart: unless-stopped
+
+    ports:
+      - "1514:1514/tcp"   # Agent communication (encrypted)
+      - "1515:1515/tcp"   # Agent enrollment
+      - "514:514/udp"     # Syslog collection (optional)
+
+    environment:
+      # Disable Filebeat since there is no indexer/Elasticsearch
+      - FILEBEAT_SSL_VERIFICATION_MODE=none
+
+    volumes:
+      # Mount custom PLC security rules into the manager (read-only)
+      - ./plc_security_rules.xml:/var/ossec/etc/rules/plc_security_rules.xml:ro
+
+      # Mount alerts directory to host for AlertIngester to read
+      - C:/wazuh-alerts:/var/ossec/logs/alerts
+
+      # Persist manager data across container restarts
+      - wazuh-etc:/var/ossec/etc
+      - wazuh-logs:/var/ossec/logs
+      - wazuh-queue:/var/ossec/queue
+
+volumes:
+  wazuh-etc:
+  wazuh-logs:
+  wazuh-queue:

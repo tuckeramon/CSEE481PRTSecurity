@@ -1,6 +1,8 @@
 from time import time, sleep
 from Communication.PLC import PLC
 from Communication.PRTDB import PRTDB
+from Communication.PLCSecurityMonitor import PLCSecurityMonitor
+from Communication.AlertIngester import AlertIngester
 from PRTConfig import TAG_TO_READ, STATUS_BIT, TAG_TO_WRITE, prt_get_dest_route
 from Communication.PLCConfig import PRT_PLC_IP_ADDRESS
 from PRTPLC import PRTPLC
@@ -14,8 +16,23 @@ WATCHDOG_INTERVAL = 2
 # Removal command poll interval (seconds)
 REMOVAL_POLL_INTERVAL = 1
 
+# Security monitoring intervals (seconds)
+SECURITY_CHECK_INTERVAL = 5       # Check for mode changes, faults every 5 seconds
+SECURITY_STATUS_INTERVAL = 300    # Log periodic status every 5 minutes
+ALERT_INGEST_INTERVAL = 10        # Check for new Wazuh alerts every 10 seconds
+
 # PRT PLC
 prt = None
+
+# PLC Security Monitor
+security_monitor = None
+
+# Wazuh Alert Ingester
+alert_ingester = None
+
+# Path to Wazuh alerts.json (mounted from Docker volume)
+# Update this path to match your Docker volume mount point
+WAZUH_ALERTS_PATH = "C:/wazuh-alerts/alerts.json"
 
 # MAJOR CHANGE: Database configuration now points to unified 'prt_unified' database
 # OLD: 'database': 'prtdb' - Backend had separate database from frontend
@@ -68,7 +85,7 @@ def process_barcode(barcode: str):
 
 def initialize_system():
     print(f"PRT_PLC: Connecting to PLC: {PRT_PLC_IP_ADDRESS}...")
-    global prt
+    global prt, security_monitor
     prt = PRTPLC()
     # HTTP Server removed - frontend now writes directly to database
     # Backend polls PRTRemoveCart for removal commands
@@ -77,6 +94,22 @@ def initialize_system():
     prt.write_tag(f'SORTER_1_REPORT.END', 0)
     prt.write_tag(f'SORTER_2_REPORT.END', 0)
     prt.send_watchdog_signal()
+
+    # Initialize PLC Security Monitor
+    # This monitors for security-relevant events: mode changes, faults, baseline deviations
+    print(f"SECURITY: Initializing security monitor for PLC: {PRT_PLC_IP_ADDRESS}...")
+    security_monitor = PLCSecurityMonitor(PRT_PLC_IP_ADDRESS, prtdb)
+    if security_monitor.connect():
+        print("SECURITY: Security monitor connected and baseline verified")
+    else:
+        print("SECURITY: Warning - Security monitor failed to connect (will retry)")
+
+    # Initialize Wazuh Alert Ingester
+    # Reads correlated alerts from the Wazuh manager back into the database
+    global alert_ingester
+    print(f"ALERTS: Initializing alert ingester for: {WAZUH_ALERTS_PATH}")
+    alert_ingester = AlertIngester(prtdb, alerts_path=WAZUH_ALERTS_PATH)
+
     print("System initialized - polling database for commands...")
 
 def process_removal_commands():
@@ -103,17 +136,41 @@ def run_system():
     initialize_system()
     LAST_WATCHDOG_TIME = time()
     LAST_REMOVAL_POLL_TIME = time()
+    LAST_SECURITY_CHECK_TIME = time()
+    LAST_SECURITY_STATUS_TIME = time()
+    LAST_ALERT_INGEST_TIME = time()
+
     while (True):
         process_sorter(1)
         process_sorter(2)
         current_time = time()
+
         if current_time - LAST_WATCHDOG_TIME >= WATCHDOG_INTERVAL:
             prt.send_watchdog_signal()
             LAST_WATCHDOG_TIME = current_time
+
         # Poll for removal commands from frontend
         if current_time - LAST_REMOVAL_POLL_TIME >= REMOVAL_POLL_INTERVAL:
             process_removal_commands()
             LAST_REMOVAL_POLL_TIME = current_time
+
+        # Security check: detect mode changes, faults, anomalies
+        if current_time - LAST_SECURITY_CHECK_TIME >= SECURITY_CHECK_INTERVAL:
+            if security_monitor:
+                security_monitor.check_security_status()
+            LAST_SECURITY_CHECK_TIME = current_time
+
+        # Periodic security status log (for audit trail)
+        if current_time - LAST_SECURITY_STATUS_TIME >= SECURITY_STATUS_INTERVAL:
+            if security_monitor:
+                security_monitor.log_periodic_status()
+            LAST_SECURITY_STATUS_TIME = current_time
+
+        # Ingest new Wazuh alerts from the manager
+        if current_time - LAST_ALERT_INGEST_TIME >= ALERT_INGEST_INTERVAL:
+            if alert_ingester:
+                alert_ingester.ingest_new_alerts()
+            LAST_ALERT_INGEST_TIME = current_time
 
 def process_sorter(sorter_num: int):
     sorter_request = prt.read_sorter_request(sorter_num)
