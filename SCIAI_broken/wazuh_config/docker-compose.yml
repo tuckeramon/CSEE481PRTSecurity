@@ -1,15 +1,22 @@
-# Wazuh Manager - Standalone Configuration (No Indexer, No Dashboard)
+# Wazuh Manager - Docker Alternative (No Indexer, No Dashboard)
+#
+# OPTIONAL: Use this only if you prefer Docker over a native Windows install.
+# For the native Windows approach (recommended for machines without virtualization),
+# install the Wazuh manager MSI directly and skip this file entirely.
 #
 # Runs ONLY the Wazuh manager in Docker. The manager receives events from
 # the Wazuh agent on the host, applies correlation rules (plc_security_rules.xml),
 # and writes alerts to alerts.json.
 #
-# The alerts directory is volume-mounted to C:\wazuh-alerts on the host so the
-# AlertIngester in the Python backend can read alerts.json directly.
+# The alerts directory is volume-mounted to SCIAI_broken/wazuh-alerts/ on the host
+# so the AlertIngester in the Python backend can read alerts.json directly.
+#
+# NOTE: If using this Docker approach, update WAZUH_ALERTS_PATH in main.py to
+# point to the wazuh-alerts directory instead of the native install path.
 #
 # PREREQUISITES:
 #   1. Docker Desktop with WSL2 backend (Windows)
-#   2. Create the host alerts directory:  mkdir C:\wazuh-alerts
+#   2. The wazuh-alerts directory in SCIAI_broken/ will be created automatically
 #   3. Wazuh agent installed on the host machine
 #
 # USAGE:
@@ -48,7 +55,7 @@ services:
       - ./plc_security_rules.xml:/var/ossec/etc/rules/plc_security_rules.xml:ro
 
       # Mount alerts directory to host for AlertIngester to read
-      - C:/wazuh-alerts:/var/ossec/logs/alerts
+      - ../wazuh-alerts:/var/ossec/logs/alerts
 
       # Persist manager data across container restarts
       - wazuh-etc:/var/ossec/etc

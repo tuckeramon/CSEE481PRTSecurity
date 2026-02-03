@@ -30,9 +30,9 @@ security_monitor = None
 # Wazuh Alert Ingester
 alert_ingester = None
 
-# Path to Wazuh alerts.json (mounted from Docker volume)
-# Update this path to match your Docker volume mount point
-WAZUH_ALERTS_PATH = "C:/wazuh-alerts/alerts.json"
+# Path to Wazuh alerts.json (native Windows manager install)
+# Default Wazuh manager install: C:\Program Files (x86)\ossec-agent\logs\alerts\alerts.json
+WAZUH_ALERTS_PATH = "C:/Program Files (x86)/ossec-agent/logs/alerts/alerts.json"
 
 # MAJOR CHANGE: Database configuration now points to unified 'prt_unified' database
 # OLD: 'database': 'prtdb' - Backend had separate database from frontend

@@ -36,8 +36,8 @@ class AlertIngester:
     similar to how PLCSecurityMonitor.check_security_status() is called.
     """
 
-    # Default path where Docker volume mounts the alerts file
-    DEFAULT_ALERTS_PATH = "C:/wazuh-alerts/alerts.json"
+    # Default path for native Windows Wazuh manager install
+    DEFAULT_ALERTS_PATH = "C:/Program Files (x86)/ossec-agent/logs/alerts/alerts.json"
 
     def __init__(self, prtdb, alerts_path: str = None):
         """
