@@ -619,7 +619,7 @@ class PRTDB(Database):
         """
         query = """
         SELECT f.plc_ip,
-               CONCAT(m.id, ',', f.id) AS log_ids
+               CONCAT(GROUP_CONCAT(DISTINCT m.id ORDER BY m.id), ',', f.id) AS log_ids
         FROM PLCSecurityLogs f
         INNER JOIN PLCSecurityLogs m
             ON m.plc_ip = f.plc_ip
