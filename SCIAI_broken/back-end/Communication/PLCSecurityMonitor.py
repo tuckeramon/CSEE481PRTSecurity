@@ -1,20 +1,11 @@
 """
 PLC Security Monitor for Rockwell Logix PLCs
 
-EDUCATIONAL PURPOSE:
-This module demonstrates industrial control system (ICS) security monitoring.
-It connects to a Rockwell Automation Logix PLC and monitors for security-relevant
+This module monitors a Rockwell Automation Logix PLC for security-relevant
 events that could indicate unauthorized access or system compromise.
 
-DUAL OUTPUT LOGS:
-Events are logged to two destinations:
-1. MySQL Database (PLCSecurityLogs) - For frontend queries and historical analysis
-2. JSON Log Files - For Wazuh SIEM ingestion and real-time alerting
-
-This dual approach allows students to:
-- Query the database directly to understand event structure
-- Inspect raw JSON logs to see exactly what Wazuh receives
-- Observe how the SIEM generates alerts
+Events are logged to the MySQL database (PLCSecurityLogs table) where the
+CorrelationEngine can detect attack patterns.
 
 SECURITY EVENTS MONITORED:
 - Controller faults (major/minor) - Hardware/software failures
@@ -30,10 +21,6 @@ Allen-Bradley CompactLogix and ControlLogix PLCs.
 from pycomm3 import LogixDriver
 from typing import Optional, Dict, Any
 import traceback
-
-# Import the Wazuh JSON logger for dual output
-from Communication.WazuhLogger import WazuhLogger
-
 
 class PLCSecurityMonitor:
     """
@@ -57,29 +44,16 @@ class PLCSecurityMonitor:
         7: "Program (Faulted)"
     }
 
-    def __init__(self, plc_ip: str, prtdb, enable_wazuh: bool = True):
+    def __init__(self, plc_ip: str, prtdb):
         """
         Initialize the security monitor for a specific PLC.
-        This monitor implements dual-output logging:
-        1. Database (prtdb) - For queries, frontend display, historical analysis
-        2. Wazuh JSON (wazuh_logger) - For SIEM ingestion and real-time alerting
 
         :param plc_ip: IP address of the PLC to monitor
         :param prtdb: PRTDB instance for database operations
-        :param enable_wazuh: Whether to enable Wazuh JSON logging (default: True)
         """
         self.plc_ip = plc_ip
         self.prtdb = prtdb
         self.driver: Optional[LogixDriver] = None
-
-        # Initialize Wazuh JSON logger for SIEM integration
-        # This creates a separate log file that Wazuh monitors
-        self.enable_wazuh = enable_wazuh
-        if enable_wazuh:
-            self.wazuh_logger = WazuhLogger()
-            print(f"PLCSecurityMonitor: Wazuh logging enabled -> {self.wazuh_logger.get_log_path()}")
-        else:
-            self.wazuh_logger = None
 
         # Cached state for change detection
         self._last_mode = None
@@ -100,15 +74,9 @@ class PLCSecurityMonitor:
         raw_data: Dict[str, Any] = None
     ):
         """
-        DUAL OUTPUT: Log security event to BOTH database AND Wazuh JSON file.
-        1. Database write - For persistence, queries, and frontend display
-        2. JSON file write - For Wazuh SIEM ingestion
-
-        - Wazuh can't parse MySQL data natively
-        - JSON files are easy for Wazuh to monitor in real-time
-        - Students can inspect both outputs to understand the data flow
+        Log a security event to the database (PLCSecurityLogs table).
+        The CorrelationEngine queries this table to detect attack patterns.
         """
-        # Output 1: Database (for frontend and historical queries)
         self.prtdb.log_plc_security_event(
             plc_ip=self.plc_ip,
             event_type=event_type,
@@ -122,21 +90,6 @@ class PLCSecurityMonitor:
             raw_data=raw_data
         )
 
-        # Output 2: Wazuh JSON file (for SIEM ingestion)
-        if self.wazuh_logger:
-            self.wazuh_logger.log_event(
-                plc_ip=self.plc_ip,
-                event_type=event_type,
-                message=event_message,
-                severity=severity,
-                plc_name=plc_name,
-                plc_serial=plc_serial,
-                event_code=event_code,
-                previous_state=previous_state,
-                current_state=current_state,
-                raw_data=raw_data
-            )
-
     def connect(self) -> bool:
         """
         Establish connection to the PLC.
@@ -149,7 +102,7 @@ class PLCSecurityMonitor:
             self.driver.open()
             self._connected = True
 
-            # Log successful connection (dual output: DB + Wazuh)
+            # Log successful connection
             self._log_security_event(
                 event_type=self.prtdb.EVENT_CONNECTION,
                 event_message=f"Security monitor connected to PLC at {self.plc_ip}",
@@ -371,7 +324,7 @@ class PLCSecurityMonitor:
                     "message": f"PLC product type changed! Expected {baseline['product_type']}, found {current['product_name']}"
                 })
 
-        # Log all deviations (dual output: DB + Wazuh)
+        # Log all deviations
         for dev in deviations:
             self._log_security_event(
                 event_type=self.prtdb.EVENT_BASELINE_DEVIATION,

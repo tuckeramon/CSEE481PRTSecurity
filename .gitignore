@@ -18,7 +18,6 @@ SCIAI_broken/test_mysql_connection.py
 
 # Data logs - these are generated at runtime
 SCIAI_broken/datalogs/*.csv
-SCIAI_broken/wazuh-alerts/
 
 # Windows reserved device names
 nul

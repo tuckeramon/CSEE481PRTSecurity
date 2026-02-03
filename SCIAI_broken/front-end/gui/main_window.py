@@ -27,6 +27,7 @@ class MainWindow(QMainWindow):
             self.home_view = HomeView()
             self.activity_view = ActivityLogView(self.db_conn)
             self.manage_users_view = ManageUsersView()
+            #self.security_view = SecurityLogView(self.db_conn)
 
             # Page stack
             self.stack = QStackedWidget()

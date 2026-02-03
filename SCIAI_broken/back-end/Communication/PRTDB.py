@@ -460,75 +460,63 @@ class PRTDB(Database):
         return self.fetch(query, [hours])
 
     # =========================================================================
-    # WAZUH ALERT STORAGE METHODS
-    # For storing correlated/enriched alerts from the Wazuh SIEM manager.
+    # CORRELATION ALERT METHODS
+    # For storing and querying correlated security alerts from CorrelationEngine.
     # These are DISTINCT from PLCSecurityLogs (raw events from PLCSecurityMonitor).
     # =========================================================================
 
-    def store_wazuh_alert(
+    def store_correlation_alert(
         self,
-        wazuh_alert_id: str,
-        wazuh_rule_id: str,
-        wazuh_rule_level: int,
-        wazuh_rule_description: str,
-        wazuh_rule_groups: str = None,
-        agent_id: str = None,
-        agent_name: str = None,
-        agent_ip: str = None,
+        alert_id: str,
+        rule_id: str,
+        rule_level: int,
+        rule_description: str,
         plc_ip: str = None,
         event_type: str = None,
         severity: str = None,
         event_message: str = None,
-        previous_state: str = None,
-        current_state: str = None,
-        raw_alert: str = None,
-        wazuh_timestamp=None
+        matched_event_count: int = None,
+        time_window_seconds: int = None,
+        matched_log_ids: str = None
     ):
         """
-        Store a Wazuh alert in the PLCSecurityAlerts table.
+        Store a correlated security alert in the PLCSecurityAlerts table.
 
         Uses INSERT IGNORE to safely handle duplicate alert IDs
-        (the wazuh_alert_id column has a UNIQUE index).
+        (the alert_id column has a UNIQUE index).
 
-        :param wazuh_alert_id: Unique alert identifier (timestamp_ruleId_agentId)
-        :param wazuh_rule_id: Wazuh rule ID that triggered (e.g., "100021")
-        :param wazuh_rule_level: Wazuh severity level (0-15)
-        :param wazuh_rule_description: Description from the rule definition
-        :param wazuh_rule_groups: Comma-separated rule groups
-        :param agent_id: Wazuh agent ID
-        :param agent_name: Wazuh agent name
-        :param agent_ip: Wazuh agent IP
-        :param plc_ip: PLC IP from original event data
-        :param event_type: Event type from original event
-        :param severity: Severity from original event
-        :param event_message: Message from original event
-        :param previous_state: Previous state from original event
-        :param current_state: Current state from original event
-        :param raw_alert: Full Wazuh alert as JSON string
-        :param wazuh_timestamp: Datetime when Wazuh generated the alert
+        :param alert_id: Unique dedup key (rule_id + plc_ip + time_bucket)
+        :param rule_id: Correlation rule ID (e.g., "CORR_001")
+        :param rule_level: Severity level (0-15 scale)
+        :param rule_description: Human-readable description
+        :param plc_ip: PLC IP from correlated events
+        :param event_type: Event type (MODE_CHANGE, CONNECTION, FAULT)
+        :param severity: Alert severity
+        :param event_message: Summary message
+        :param matched_event_count: Number of events that triggered this alert
+        :param time_window_seconds: Time window used for detection
+        :param matched_log_ids: CSV of PLCSecurityLogs.id values
         :return: Number of rows inserted (1 on success, 0 if duplicate)
         """
         query = """
         INSERT IGNORE INTO PLCSecurityAlerts
-            (wazuh_alert_id, wazuh_rule_id, wazuh_rule_level, wazuh_rule_description,
-             wazuh_rule_groups, agent_id, agent_name, agent_ip,
+            (alert_id, rule_id, rule_level, rule_description,
              plc_ip, event_type, severity, event_message,
-             previous_state, current_state, raw_alert, wazuh_timestamp)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+             matched_event_count, time_window_seconds, matched_log_ids)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         args = [(
-            wazuh_alert_id, wazuh_rule_id, wazuh_rule_level, wazuh_rule_description,
-            wazuh_rule_groups, agent_id, agent_name, agent_ip,
+            alert_id, rule_id, rule_level, rule_description,
             plc_ip, event_type, severity, event_message,
-            previous_state, current_state, raw_alert, wazuh_timestamp
+            matched_event_count, time_window_seconds, matched_log_ids
         )]
         try:
             return self.insert(query, args)
         except Exception as e:
-            print(f"Error storing Wazuh alert: {e}")
+            print(f"Error storing correlation alert: {e}")
             return 0
 
-    def get_recent_wazuh_alerts(
+    def get_recent_alerts(
         self,
         plc_ip: str = None,
         min_level: int = None,
@@ -537,10 +525,10 @@ class PRTDB(Database):
         limit: int = 100
     ):
         """
-        Retrieve recent Wazuh alerts with optional filters.
+        Retrieve recent correlated alerts with optional filters.
 
         :param plc_ip: Filter by PLC IP address (None for all)
-        :param min_level: Minimum Wazuh rule level 0-15 (None for all)
+        :param min_level: Minimum rule level 0-15 (None for all)
         :param event_type: Filter by event type (MODE_CHANGE, FAULT, etc.)
         :param acknowledged: Filter by acknowledgement status (True/False/None)
         :param limit: Maximum number of alerts to return
@@ -554,7 +542,7 @@ class PRTDB(Database):
             args.append(plc_ip)
 
         if min_level is not None:
-            query += " AND wazuh_rule_level >= %s"
+            query += " AND rule_level >= %s"
             args.append(min_level)
 
         if event_type:
@@ -565,14 +553,14 @@ class PRTDB(Database):
             query += " AND acknowledged = %s"
             args.append(1 if acknowledged else 0)
 
-        query += " ORDER BY wazuh_timestamp DESC LIMIT %s"
+        query += " ORDER BY detected_at DESC LIMIT %s"
         args.append(limit)
 
         return self.fetch(query, args)
 
     def acknowledge_alert(self, alert_id: int, acknowledged_by: str = None):
         """
-        Mark a Wazuh alert as acknowledged by an operator.
+        Mark a correlated alert as acknowledged by an operator.
 
         :param alert_id: The PLCSecurityAlerts.id of the alert to acknowledge
         :param acknowledged_by: Username or identifier of who acknowledged it
@@ -587,6 +575,65 @@ class PRTDB(Database):
         """
         args = (acknowledged_by, alert_id)
         return self.update(query, args)
+
+    # =========================================================================
+    # CORRELATION QUERY METHODS
+    # Used by CorrelationEngine to detect attack patterns in PLCSecurityLogs.
+    # =========================================================================
+
+    def count_events_in_window(self, event_type: str, severity: str = None, timeframe_seconds: int = 300):
+        """
+        Count security events per PLC within a time window.
+        Used by CorrelationEngine for frequency-based rules (CORR_001, CORR_002).
+
+        :param event_type: Event type to count (MODE_CHANGE, CONNECTION, etc.)
+        :param severity: Optional severity filter (e.g., "ERROR")
+        :param timeframe_seconds: How far back to look in seconds
+        :return: List of dicts with plc_ip, event_count, log_ids
+        """
+        query = """
+        SELECT plc_ip,
+               COUNT(*) AS event_count,
+               GROUP_CONCAT(id ORDER BY id) AS log_ids
+        FROM PLCSecurityLogs
+        WHERE event_type = %s
+          AND timestamp >= DATE_SUB(NOW(), INTERVAL %s SECOND)
+        """
+        args = [event_type, timeframe_seconds]
+
+        if severity:
+            query += " AND severity = %s"
+            args.append(severity)
+
+        query += " GROUP BY plc_ip"
+
+        return self.fetch(query, args)
+
+    def find_faults_after_mode_changes(self, fault_window_seconds: int = 300):
+        """
+        Find critical faults that occurred shortly after a mode change on the same PLC.
+        Used by CorrelationEngine for sequential pattern rule (CORR_003).
+
+        :param fault_window_seconds: Max seconds between mode change and fault
+        :return: List of dicts with plc_ip, log_ids
+        """
+        query = """
+        SELECT f.plc_ip,
+               CONCAT(m.id, ',', f.id) AS log_ids
+        FROM PLCSecurityLogs f
+        INNER JOIN PLCSecurityLogs m
+            ON m.plc_ip = f.plc_ip
+           AND m.event_type = 'MODE_CHANGE'
+           AND m.timestamp < f.timestamp
+           AND m.timestamp >= DATE_SUB(f.timestamp, INTERVAL %s SECOND)
+        WHERE f.event_type = 'FAULT'
+          AND f.severity = 'CRITICAL'
+          AND f.timestamp >= DATE_SUB(NOW(), INTERVAL %s SECOND)
+        GROUP BY f.plc_ip, f.id
+        """
+        args = [fault_window_seconds, fault_window_seconds]
+
+        return self.fetch(query, args)
 
 
 

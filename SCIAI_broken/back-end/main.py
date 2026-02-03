@@ -2,7 +2,7 @@ from time import time, sleep
 from Communication.PLC import PLC
 from Communication.PRTDB import PRTDB
 from Communication.PLCSecurityMonitor import PLCSecurityMonitor
-from Communication.AlertIngester import AlertIngester
+from Communication.CorrelationEngine import CorrelationEngine
 from PRTConfig import TAG_TO_READ, STATUS_BIT, TAG_TO_WRITE, prt_get_dest_route
 from Communication.PLCConfig import PRT_PLC_IP_ADDRESS
 from PRTPLC import PRTPLC
@@ -19,7 +19,7 @@ REMOVAL_POLL_INTERVAL = 1
 # Security monitoring intervals (seconds)
 SECURITY_CHECK_INTERVAL = 5       # Check for mode changes, faults every 5 seconds
 SECURITY_STATUS_INTERVAL = 300    # Log periodic status every 5 minutes
-ALERT_INGEST_INTERVAL = 10        # Check for new Wazuh alerts every 10 seconds
+CORRELATION_INTERVAL = 10         # Run correlation engine every 10 seconds
 
 # PRT PLC
 prt = None
@@ -27,12 +27,8 @@ prt = None
 # PLC Security Monitor
 security_monitor = None
 
-# Wazuh Alert Ingester
-alert_ingester = None
-
-# Path to Wazuh alerts.json (native Windows manager install)
-# Default Wazuh manager install: C:\Program Files (x86)\ossec-agent\logs\alerts\alerts.json
-WAZUH_ALERTS_PATH = "C:/Program Files (x86)/ossec-agent/logs/alerts/alerts.json"
+# SQL Correlation Engine
+correlation_engine = None
 
 # MAJOR CHANGE: Database configuration now points to unified 'prt_unified' database
 # OLD: 'database': 'prtdb' - Backend had separate database from frontend
@@ -104,11 +100,11 @@ def initialize_system():
     else:
         print("SECURITY: Warning - Security monitor failed to connect (will retry)")
 
-    # Initialize Wazuh Alert Ingester
-    # Reads correlated alerts from the Wazuh manager back into the database
-    global alert_ingester
-    print(f"ALERTS: Initializing alert ingester for: {WAZUH_ALERTS_PATH}")
-    alert_ingester = AlertIngester(prtdb, alerts_path=WAZUH_ALERTS_PATH)
+    # Initialize SQL Correlation Engine
+    # Detects attack patterns in PLCSecurityLogs and stores alerts in PLCSecurityAlerts
+    global correlation_engine
+    print("CORRELATION: Initializing correlation engine...")
+    correlation_engine = CorrelationEngine(prtdb)
 
     print("System initialized - polling database for commands...")
 
@@ -138,7 +134,7 @@ def run_system():
     LAST_REMOVAL_POLL_TIME = time()
     LAST_SECURITY_CHECK_TIME = time()
     LAST_SECURITY_STATUS_TIME = time()
-    LAST_ALERT_INGEST_TIME = time()
+    LAST_CORRELATION_TIME = time()
 
     while (True):
         process_sorter(1)
@@ -166,11 +162,11 @@ def run_system():
                 security_monitor.log_periodic_status()
             LAST_SECURITY_STATUS_TIME = current_time
 
-        # Ingest new Wazuh alerts from the manager
-        if current_time - LAST_ALERT_INGEST_TIME >= ALERT_INGEST_INTERVAL:
-            if alert_ingester:
-                alert_ingester.ingest_new_alerts()
-            LAST_ALERT_INGEST_TIME = current_time
+        # Run correlation engine to detect attack patterns
+        if current_time - LAST_CORRELATION_TIME >= CORRELATION_INTERVAL:
+            if correlation_engine:
+                correlation_engine.run_correlation()
+            LAST_CORRELATION_TIME = current_time
 
 def process_sorter(sorter_num: int):
     sorter_request = prt.read_sorter_request(sorter_num)
