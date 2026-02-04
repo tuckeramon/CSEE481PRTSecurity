@@ -17,6 +17,10 @@ CORRELATION RULES:
         A CRITICAL FAULT occurring within 300 seconds after a MODE_CHANGE
         on the same PLC. Indicates possible malicious code execution.
 
+    CORR_004 - Firewall Scan Detection:
+        10+ FIREWALL_BLOCK events from the same source IP within 120 seconds.
+        Indicates a port scan or persistent unauthorized access attempt.
+
 DATA FLOW:
     PLCSecurityMonitor writes events to PLCSecurityLogs (MySQL)
         |
@@ -62,6 +66,7 @@ class CorrelationEngine:
             count += self._check_rapid_mode_changes()
             count += self._check_connection_brute_force()
             count += self._check_fault_after_mode_change()
+            count += self._check_firewall_scan()
         except Exception as e:
             print(f"CorrelationEngine: Error during correlation: {e}")
 
@@ -212,6 +217,45 @@ class CorrelationEngine:
             )
             if stored > 0:
                 count += 1
+
+        return count
+
+    def _check_firewall_scan(self) -> int:
+        """
+        CORR_004: Detect 10+ firewall blocks from the same IP within 120 seconds.
+        Indicates a port scan or persistent unauthorized access attempt.
+
+        :return: Number of new alerts generated
+        """
+        timeframe = 120  # 2 minutes
+        threshold = 10
+
+        results = self.prtdb.count_firewall_blocks_in_window(
+            timeframe_seconds=timeframe
+        )
+
+        count = 0
+        time_bucket = self._get_time_bucket(timeframe)
+
+        for row in results:
+            if row["event_count"] >= threshold:
+                alert_id = self._generate_alert_id("CORR_004", row["plc_ip"], time_bucket)
+
+                stored = self.prtdb.store_correlation_alert(
+                    alert_id=alert_id,
+                    rule_id="CORR_004",
+                    rule_level=15,
+                    rule_description="Persistent unauthorized access attempts detected - possible attack",
+                    plc_ip=row["plc_ip"],
+                    event_type="FIREWALL_BLOCK",
+                    severity="CRITICAL",
+                    event_message=f"{row['event_count']} blocked connection attempts from {row['plc_ip']} in {timeframe}s",
+                    matched_event_count=row["event_count"],
+                    time_window_seconds=timeframe,
+                    matched_log_ids=row.get("log_ids")
+                )
+                if stored > 0:
+                    count += 1
 
         return count
 

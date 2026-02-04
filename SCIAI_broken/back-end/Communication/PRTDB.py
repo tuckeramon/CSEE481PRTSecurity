@@ -313,6 +313,8 @@ class PRTDB(Database):
     EVENT_STATUS = "STATUS"
     EVENT_CONFIG_CHANGE = "CONFIG_CHANGE"
     EVENT_BASELINE_DEVIATION = "BASELINE_DEVIATION"
+    EVENT_FIREWALL_BLOCK = "FIREWALL_BLOCK"
+    EVENT_FIREWALL_ALLOW = "FIREWALL_ALLOW"
 
     def log_plc_security_event(
         self,
@@ -635,5 +637,74 @@ class PRTDB(Database):
 
         return self.fetch(query, args)
 
+    # =========================================================================
+    # FIREWALL WHITELIST METHODS
+    # For managing the PLC proxy firewall whitelist and querying block events.
+    # =========================================================================
 
+    def get_firewall_whitelist(self):
+        """
+        Get all active whitelist entries from PLCFirewallWhitelist.
+        Used by PLCProxyFirewall to load dynamic whitelist.
 
+        :return: List of dicts with ip_address, description, is_active
+        """
+        query = """
+        SELECT ip_address, description, is_active
+        FROM PLCFirewallWhitelist
+        WHERE is_active = 1
+        """
+        try:
+            return self.fetch(query, [])
+        except Exception as e:
+            print(f"Warning: Failed to load firewall whitelist from DB: {e}")
+            return []
+
+    def add_firewall_whitelist_entry(self, ip_address, description=None, added_by=None):
+        """
+        Add an IP to the firewall whitelist.
+
+        :param ip_address: IP address to whitelist
+        :param description: Human-readable reason
+        :param added_by: Who added it
+        :return: Rows inserted
+        """
+        query = """
+        INSERT IGNORE INTO PLCFirewallWhitelist (ip_address, description, added_by)
+        VALUES (%s, %s, %s)
+        """
+        args = [(ip_address, description, added_by)]
+        return self.insert(query, args)
+
+    def remove_firewall_whitelist_entry(self, ip_address):
+        """
+        Deactivate an IP from the firewall whitelist (soft delete).
+
+        :param ip_address: IP address to remove
+        :return: Rows updated
+        """
+        query = """
+        UPDATE PLCFirewallWhitelist
+        SET is_active = 0
+        WHERE ip_address = %s
+        """
+        return self.update(query, (ip_address,))
+
+    def count_firewall_blocks_in_window(self, timeframe_seconds=60):
+        """
+        Count FIREWALL_BLOCK events per source IP within a time window.
+        Used by CorrelationEngine for CORR_004 rule.
+
+        :param timeframe_seconds: How far back to look
+        :return: List of dicts with plc_ip (source IP), event_count, log_ids
+        """
+        query = """
+        SELECT plc_ip,
+               COUNT(*) AS event_count,
+               GROUP_CONCAT(id ORDER BY id) AS log_ids
+        FROM PLCSecurityLogs
+        WHERE event_type = 'FIREWALL_BLOCK'
+          AND timestamp >= DATE_SUB(NOW(), INTERVAL %s SECOND)
+        GROUP BY plc_ip
+        """
+        return self.fetch(query, [timeframe_seconds])

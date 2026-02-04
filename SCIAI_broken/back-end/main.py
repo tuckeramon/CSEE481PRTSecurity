@@ -4,7 +4,12 @@ from Communication.PRTDB import PRTDB
 from Communication.PLCSecurityMonitor import PLCSecurityMonitor
 from Communication.CorrelationEngine import CorrelationEngine
 from PRTConfig import TAG_TO_READ, STATUS_BIT, TAG_TO_WRITE, prt_get_dest_route
-from Communication.PLCConfig import PRT_PLC_IP_ADDRESS
+from Communication.PLCConfig import PRT_PLC_IP_ADDRESS, PLC_FIREWALL_ENABLED
+from Communication.PLCProxyFirewall import PLCProxyFirewall
+from Communication.FirewallConfig import (
+    PLC_TARGET_IP, PROXY_PORTS, PROXY_BIND_IP,
+    WHITELIST_IPS, WHITELIST_REFRESH_INTERVAL
+)
 from PRTPLC import PRTPLC
 from PRTConfig import BARCODE_DESTINATION_MAP
 # Server and threading imports removed - now using direct database polling instead of HTTP
@@ -29,6 +34,9 @@ security_monitor = None
 
 # SQL Correlation Engine
 correlation_engine = None
+
+# PLC Proxy Firewall
+proxy_firewall = None
 
 # MAJOR CHANGE: Database configuration now points to unified 'prt_unified' database
 # OLD: 'database': 'prtdb' - Backend had separate database from frontend
@@ -80,8 +88,24 @@ def process_barcode(barcode: str):
     return barcode
 
 def initialize_system():
+    global prt, security_monitor, proxy_firewall
+
+    # Start proxy firewall BEFORE any PLC connections
+    if PLC_FIREWALL_ENABLED:
+        print(f"FIREWALL: Initializing PLC proxy firewall...")
+        proxy_firewall = PLCProxyFirewall(
+            prtdb=prtdb,
+            plc_target_ip=PLC_TARGET_IP,
+            proxy_ports=PROXY_PORTS,
+            proxy_bind_ip=PROXY_BIND_IP,
+            whitelist_ips=WHITELIST_IPS
+        )
+        proxy_firewall.start()
+        print(f"FIREWALL: Proxy active - forwarding to {PLC_TARGET_IP}, ports {PROXY_PORTS}")
+    else:
+        print("FIREWALL: Proxy firewall disabled - connecting directly to PLC")
+
     print(f"PRT_PLC: Connecting to PLC: {PRT_PLC_IP_ADDRESS}...")
-    global prt, security_monitor
     prt = PRTPLC()
     # HTTP Server removed - frontend now writes directly to database
     # Backend polls PRTRemoveCart for removal commands
@@ -137,6 +161,7 @@ def run_system():
     LAST_SECURITY_CHECK_TIME = time()
     LAST_SECURITY_STATUS_TIME = time()
     LAST_CORRELATION_TIME = time()
+    LAST_WHITELIST_REFRESH_TIME = time()
 
     while (True):
         process_sorter(1)
@@ -169,6 +194,12 @@ def run_system():
             if correlation_engine:
                 correlation_engine.run_correlation()
             LAST_CORRELATION_TIME = current_time
+
+        # Refresh firewall whitelist from database
+        if current_time - LAST_WHITELIST_REFRESH_TIME >= WHITELIST_REFRESH_INTERVAL:
+            if proxy_firewall:
+                proxy_firewall.refresh_whitelist()
+            LAST_WHITELIST_REFRESH_TIME = current_time
 
 def process_sorter(sorter_num: int):
     sorter_request = prt.read_sorter_request(sorter_num)
