@@ -7,7 +7,7 @@ from PRTConfig import TAG_TO_READ, STATUS_BIT, TAG_TO_WRITE, prt_get_dest_route
 from Communication.PLCConfig import PRT_PLC_IP_ADDRESS, PLC_FIREWALL_ENABLED
 from Communication.PLCProxyFirewall import PLCProxyFirewall
 from Communication.FirewallConfig import (
-    PLC_TARGET_IP, PROXY_PORTS, PROXY_BIND_IP,
+    PLC_TARGET_IP, PROXY_PORT_MAP, PROXY_BIND_IP,
     WHITELIST_IPS, WHITELIST_REFRESH_INTERVAL
 )
 from PRTPLC import PRTPLC
@@ -96,12 +96,12 @@ def initialize_system():
         proxy_firewall = PLCProxyFirewall(
             prtdb=prtdb,
             plc_target_ip=PLC_TARGET_IP,
-            proxy_ports=PROXY_PORTS,
+            proxy_port_map=PROXY_PORT_MAP,
             proxy_bind_ip=PROXY_BIND_IP,
             whitelist_ips=WHITELIST_IPS
         )
         proxy_firewall.start()
-        print(f"FIREWALL: Proxy active - forwarding to {PLC_TARGET_IP}, ports {PROXY_PORTS}")
+        print(f"FIREWALL: Proxy active - forwarding to {PLC_TARGET_IP}")
     else:
         print("FIREWALL: Proxy firewall disabled - connecting directly to PLC")
 
