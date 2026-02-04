@@ -130,6 +130,8 @@ def process_removal_commands():
 
 def run_system():
     initialize_system()
+    # Inform the operator that only valid barcode reads will be printed
+    print("Only printing valid barcode reads")
     LAST_WATCHDOG_TIME = time()
     LAST_REMOVAL_POLL_TIME = time()
     LAST_SECURITY_CHECK_TIME = time()

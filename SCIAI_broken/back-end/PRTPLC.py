@@ -33,8 +33,21 @@ class PRTPLC(PLC):
         if data['END'] == 1:
             #Reset to 0
             self.write_tag(f'SORTER_{sorter_num}_REPORT.END', 0)
-            print(f"Sorted_Report: {data}")
-            return data['BARCODE'], data['FLAGS']['ACTIVE'], data['FLAGS']['LOST'], data['FLAGS']['GOOD'], data['FLAGS']['DIVERTED']
+            raw_barcode = data.get('BARCODE', '')
+            # Normalize barcode: strip null chars and whitespace (PLC often uses fixed-length fields filled with \x00)
+            if isinstance(raw_barcode, str):
+                barcode = raw_barcode.strip('\x00').strip()
+            else:
+                barcode = str(raw_barcode).strip('\x00').strip()
+
+            # Only log and return when the scanner actually read a barcode (non-empty after normalization)
+            
+            if barcode:
+                print(f"Sorted_Report: {data}")
+                return barcode, data['FLAGS']['ACTIVE'], data['FLAGS']['LOST'], data['FLAGS']['GOOD'], data['FLAGS']['DIVERTED']
+
+            # Treat null/empty barcode as no report
+            return None
         
     def send_watchdog_signal(self):
         self.write_tag('OPC_WATCHDOG', 1)

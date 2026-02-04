@@ -24,7 +24,9 @@ class PLC:
             print(f"PLC: Connected to {self.ip_address}")
             return True
         except Exception as e:
-            print(f"PLC: Failed to connect to {self.ip_address}")
+            # Ensure we don't leave a half-initialized driver that will later raise session errors
+            print(f"PLC: Failed to connect to {self.ip_address}: {e}")
+            self.driver = None
             return False
 
     def read_tag(self, tag_name: str):
@@ -34,8 +36,10 @@ class PLC:
         :return: Value of the tag, None upon failure
         """
         if self.driver is None:
-            print(f"PLC: Not connected to {self.ip_address} to read.")
-            return None
+            print(f"PLC: Not connected to {self.ip_address} to read. Attempting to connect.")
+            if not self.connect():
+                print(f"PLC: Connect failed; cannot read {tag_name} at {self.ip_address}")
+                return None
 
         try:
             response = self.driver.read(tag_name)
@@ -44,6 +48,29 @@ class PLC:
                 return None
             return response.value
         except Exception as e:
+            msg = str(e).lower()
+            # Try to recover from a lost/unregistered session by re-opening once
+            if "session must be registered" in msg or "forward open" in msg:
+                print(f"PLC: Session error when reading {self.ip_address}: {e}. Attempting to reopen connection.")
+                try:
+                    # Attempt to reopen or recreate driver
+                    if self.driver is None:
+                        self.driver = LogixDriver(self.ip_address)
+                    self.driver.open()
+                    response = self.driver.read(tag_name)
+                    if response is None:
+                        print(f"PLC: Read retry failed for tag {tag_name} at IP {self.ip_address}")
+                        return None
+                    return response.value
+                except Exception as e2:
+                    print(f"PLC: Read retry failed for {self.ip_address}: {e2}")
+                    # Reset driver to force explicit reconnect next time
+                    try:
+                        self.driver.close()
+                    except Exception:
+                        pass
+                    self.driver = None
+                    return None
             print(f"PLC: Exception during read of {self.ip_address}: {e}")
             return None
 
@@ -55,16 +82,39 @@ class PLC:
         :return: True on success, False on failure
         """
         if self.driver is None:
-            print(f"PLC: Not connected to {self.ip_address} to write.")
-            return None
+            print(f"PLC: Not connected to {self.ip_address} to write. Attempting to connect.")
+            if not self.connect():
+                print(f"PLC: Connect failed; cannot write to {tag_name} at {self.ip_address}")
+                return None
 
         try:
             response = self.driver.write(tag_name, value)
             if response:
                 return True
-            print(f"PLC: Write failed for tag {tag_name} at IP {self.ip_address}")
+            print(f"PLC: Write failed for tag {tag_name} at IP {self.ip_address}: {response.error}")
             return False
         except Exception as e:
+            msg = str(e).lower()
+            # Try to recover from a lost/unregistered session by re-opening once
+            if "session must be registered" in msg or "forward open" in msg:
+                print(f"PLC: Session error when writing to {self.ip_address}: {e}. Attempting to reopen connection.")
+                try:
+                    if self.driver is None:
+                        self.driver = LogixDriver(self.ip_address)
+                    self.driver.open()
+                    response = self.driver.write(tag_name, value)
+                    if response:
+                        return True
+                    print(f"PLC: Write retry failed for tag {tag_name} at IP {self.ip_address}: {getattr(response, 'error', None)}")
+                    return False
+                except Exception as e2:
+                    print(f"PLC: Write retry failed for {self.ip_address}: {e2}")
+                    try:
+                        self.driver.close()
+                    except Exception:
+                        pass
+                    self.driver = None
+                    return False
             print(f"PLC: Exception during write of {self.ip_address}: {e}")
             return False
 
