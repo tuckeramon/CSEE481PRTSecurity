@@ -176,11 +176,17 @@ class PLCSecurityMonitor:
             # pycomm3 provides get_plc_info() method
             info = self.driver.get_plc_info()
 
+            revision = info.get("revision", "Unknown")
+            if isinstance(revision, dict):
+                revision = f"{revision.get('major', '?')}.{revision.get('minor', '?')}"
+            else:
+                revision = str(revision)
+
             return {
                 "product_type": info.get("product_type", "Unknown"),
                 "product_name": info.get("product_name", "Unknown"),
-                "serial_number": info.get("serial_number", "Unknown"),
-                "revision": info.get("revision", "Unknown"),
+                "serial_number": str(info.get("serial_number", "Unknown")),
+                "revision": revision,
                 "vendor": info.get("vendor", "Rockwell Automation"),
                 "name": self.driver.get_plc_name() if hasattr(self.driver, 'get_plc_name') else "Unknown"
             }
