@@ -5,6 +5,7 @@ import pymysql
 from security import check_password
 from typing import Dict
 from models.db import get_connection
+import socket
 
 class LoginWindow(QDialog):
     def __init__(self):
@@ -35,6 +36,27 @@ class LoginWindow(QDialog):
         username = self.username_input.text().strip()
         password = self.password_input.text().strip()
 
+        def _log_attempt(u, ok):
+            try:
+                conn = get_connection()
+                cursor = conn.cursor()
+                try:
+                    source_ip = socket.gethostbyname(socket.gethostname())
+                    if source_ip.startswith('127.') or source_ip == '0.0.0.0':
+                        source_ip = '127.0.0.1'
+                except Exception:
+                    source_ip = '127.0.0.1'
+
+                cursor.execute(
+                    "INSERT INTO PRTLoginAttempts (username, source_ip, status) VALUES (%s, %s, %s)",
+                    (u, source_ip, 'success' if ok else 'failure')
+                )
+                conn.commit()
+                cursor.close()
+                conn.close()
+            except Exception as e:
+                print(f"Error logging login attempt: {e}")
+
         try:
             conn = pymysql.connect(
                 host='localhost',
@@ -50,9 +72,11 @@ class LoginWindow(QDialog):
             conn.close()
 
             if user and check_password(password, user['password_hash']):
+                _log_attempt(username, True)
                 self.logged_user = user
                 self.accept()
             else:
+                _log_attempt(username, False)
                 QMessageBox.warning(self, "Login Failed", "Invalid username or password.")
         except pymysql.MySQLError as e:
             QMessageBox.critical(self, "Database Error", str(e))

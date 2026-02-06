@@ -39,7 +39,7 @@ class PLCProxyFirewall:
     TCP proxy firewall that whitelists IP addresses for PLC access.
 
     Follows the same pattern as PLCSecurityMonitor:
-    - Instantiated with prtdb for logging
+    - Instantiated with prt_unified for logging
     - Started from main.py
     - Logs security events to PLCSecurityLogs table
     """

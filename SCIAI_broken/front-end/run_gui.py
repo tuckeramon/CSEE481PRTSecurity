@@ -9,7 +9,11 @@ def main():
 
     # Show the login dialog first
     login_dialog = LoginWindow()
-    if login_dialog.exec_() == LoginWindow.Accepted and login_dialog.logged_user:
+    result = login_dialog.exec_()
+
+    success = (result == LoginWindow.Accepted and login_dialog.logged_user)
+
+    if success:
         db_conn = get_connection()
         window = MainWindow(db_conn, login_dialog.logged_user)
         window.show()

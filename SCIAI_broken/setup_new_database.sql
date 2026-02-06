@@ -105,6 +105,15 @@ CREATE TABLE PRTRemoveCart (
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Login attempts
+CREATE TABLE PRTLoginAttempts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    source_ip VARCHAR(45) NOT NULL,
+    status TINYINT(1) NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- ============================================================================
 -- SAMPLE DATA
 -- ============================================================================
