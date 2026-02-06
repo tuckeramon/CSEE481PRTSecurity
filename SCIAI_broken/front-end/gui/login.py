@@ -58,14 +58,8 @@ class LoginWindow(QDialog):
                 print(f"Error logging login attempt: {e}")
 
         try:
-            conn = pymysql.connect(
-                host='localhost',
-                user='root',
-                password='root',
-                database='prt_unified',
-                charset='utf8mb4',
-                cursorclass=pymysql.cursors.DictCursor
-            )
+            # Use centralized DB connection (reads credentials from env via models.db.load_config)
+            conn = get_connection()
             with conn.cursor() as cursor:
                 cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
                 user = cursor.fetchone()
