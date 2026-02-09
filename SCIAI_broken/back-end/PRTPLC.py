@@ -7,6 +7,7 @@ class PRTPLC(PLC):
     """
     def __init__(self):
         super().__init__(PRT_PLC_IP_ADDRESS)
+        self._last_transaction_id = {1: None, 2: None}
         self.connect()
 
     def read_sorter_request(self, sorter_num: int):
@@ -15,6 +16,13 @@ class PRTPLC(PLC):
             return None
 
         if data['END'] == 1:
+            transaction_id = data['TRANSACTION_ID']
+            # Skip duplicate requests — PLC re-sends the same transaction_id
+            # when the cart hasn't physically moved yet
+            if transaction_id == self._last_transaction_id.get(sorter_num):
+                return None
+            self._last_transaction_id[sorter_num] = transaction_id
+
             raw_barcode = data['BARCODE']
             # Normalize barcode: sorter 1 scanner sends barcode + \r terminator, but the PLC
             # string buffer retains stale bytes after the \r (e.g., '8\r00' where '8' is the
@@ -25,10 +33,10 @@ class PRTPLC(PLC):
             # Zero-pad to 4 digits (e.g., '8' -> '0008')
             barcode = barcode.zfill(4) if barcode else raw_barcode
 
-            print(f"SORTER_REQUEST_{sorter_num}: END: 1, barcode: {barcode}, transaction_id: {data['TRANSACTION_ID']}")
+            print(f"SORTER_REQUEST_{sorter_num}: END: 1, barcode: {barcode}, transaction_id: {transaction_id}")
             #Clear tag
             self.write_tag(f'SORTER_{sorter_num}_REQUEST.END', 0)
-            return barcode, data['TRANSACTION_ID']
+            return barcode, transaction_id
 
     def send_sorter_response(self, sorter_num: int, transaction_id: int, destination: int):
         #Write response tags

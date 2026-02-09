@@ -29,10 +29,6 @@ CORRELATION_INTERVAL = 10         # Run correlation engine every 10 seconds
 # PRT PLC
 prt = None
 
-# Track last processed transaction ID per sorter to prevent duplicate processing
-# When the PLC re-requests with the same transaction_id (e.g., cart stuck at scanner),
-# skip it to avoid flooding the system with repeated responses
-last_transaction_id = {1: None, 2: None}
 
 # PLC Security Monitor
 security_monitor = None
@@ -213,14 +209,8 @@ def run_system():
 def process_sorter(sorter_num: int):
     sorter_request = prt.read_sorter_request(sorter_num)
     if sorter_request is not None:
-        barcode, transaction_id = sorter_request
-        # Skip duplicate requests (same transaction_id means PLC is re-requesting
-        # because the cart hasn't physically moved yet)
-        if transaction_id == last_transaction_id[sorter_num]:
-            return
-        last_transaction_id[sorter_num] = transaction_id
-
         print(f'Sorter_Request: {sorter_request}')
+        barcode, transaction_id = sorter_request
         # Add handling for when barcode is invalid-Send it straight, log an error
         barcode = process_barcode(barcode)
         #logger.log_data(SORTER=sorter_num, TYPE="REQUEST", TRANSACTION_ID=transaction_id, BARCODE=barcode)
