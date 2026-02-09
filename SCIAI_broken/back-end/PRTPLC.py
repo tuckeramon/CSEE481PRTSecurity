@@ -30,10 +30,20 @@ class PRTPLC(PLC):
             return None
 
         if data['END'] == 1:
-            print(f"SORTER_REQUEST_{sorter_num}: END: 1, barcode: {data['BARCODE']}, transaction_id: {data['TRANSACTION_ID']}")
+            raw_barcode = data['BARCODE']
+            # Normalize barcode: strip null chars, carriage returns, newlines, and whitespace
+            # Sorter 1 scanner appends \r which garbles the barcode (e.g., '9\r00' instead of '0009')
+            if isinstance(raw_barcode, str):
+                barcode = raw_barcode.strip('\x00').strip('\r\n').strip()
+            else:
+                barcode = str(raw_barcode).strip('\x00').strip('\r\n').strip()
+            # Zero-pad to 4 digits if we got a short barcode after stripping
+            barcode = barcode.zfill(4) if barcode else raw_barcode
+
+            print(f"SORTER_REQUEST_{sorter_num}: END: 1, raw_barcode: {repr(raw_barcode)}, cleaned: {barcode}, transaction_id: {data['TRANSACTION_ID']}")
             #Clear tag
             self.write_tag(f'SORTER_{sorter_num}_REQUEST.END', 0)
-            return data['BARCODE'], data['TRANSACTION_ID']
+            return barcode, data['TRANSACTION_ID']
         else:
             if now - self._last_debug_time.get(sorter_num, 0) >= DEBUG_LOG_INTERVAL:
                 print(f"DEBUG SORTER_{sorter_num}_REQUEST: PLC connected, END={data['END']} (waiting for request), data={data}")
