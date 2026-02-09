@@ -16,12 +16,12 @@ class PRTPLC(PLC):
 
         if data['END'] == 1:
             raw_barcode = data['BARCODE']
-            # Normalize barcode: strip null chars, carriage returns, newlines, and whitespace
-            # Sorter 1 scanner appends \r which garbles the barcode (e.g., '9\r00' instead of '0009')
-            if isinstance(raw_barcode, str):
-                barcode = raw_barcode.strip('\x00').strip('\r\n').strip()
-            else:
-                barcode = str(raw_barcode).strip('\x00').strip('\r\n').strip()
+            # Normalize barcode: remove null chars, carriage returns, newlines from anywhere in string
+            # Sorter 1 scanner embeds \r in the middle of the barcode (e.g., '8\r00' instead of '0008')
+            # strip() only removes from edges, so we must use replace() for embedded control chars
+            if not isinstance(raw_barcode, str):
+                raw_barcode = str(raw_barcode)
+            barcode = raw_barcode.replace('\x00', '').replace('\r', '').replace('\n', '').strip()
             # Zero-pad to 4 digits if we got a short barcode after stripping
             barcode = barcode.zfill(4) if barcode else raw_barcode
 
