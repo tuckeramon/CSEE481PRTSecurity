@@ -68,11 +68,15 @@ prtdb = PRTDB(config)
 def get_destination(barcode: str, sorter_num: int):
     print(f"GET_DEST: barcode: {barcode}, sorter_num: {sorter_num}")
     #physical_dest = BARCODE_DESTINATION_MAP.get(barcode)  # Stations 1-4
-    barcode, physical_dest = prtdb.get_destination_info(barcode)  # Stations 1-4
+    result = prtdb.get_destination_info(barcode)  # Stations 1-4
+    if result is None:
+        print(f"GET_DEST: barcode {barcode} not found in PRTCarts, defaulting to straight-through")
+        return 0
+    physical_dest = result['destination']
     dest_rt = prt_get_dest_route(physical_dest)
     dest = dest_rt[sorter_num]
     print(f"GET_DEST: barcode: {barcode}, sorter_num: {sorter_num}, physical_dest: {physical_dest}, dest_rt: {dest_rt}, dest: {dest}")
-    return prt_get_dest_route(physical_dest)[sorter_num]
+    return dest
 
 def process_barcode(barcode: str):
     if len(barcode) != 4:
