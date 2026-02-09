@@ -213,11 +213,12 @@ def process_sorter(sorter_num: int):
         barcode, transaction_id = sorter_request
         # Add handling for when barcode is invalid-Send it straight, log an error
         barcode = process_barcode(barcode)
-        #logger.log_data(SORTER=sorter_num, TYPE="REQUEST", TRANSACTION_ID=transaction_id, BARCODE=barcode)
-        prtdb.store_sorter_request(sorter_num, barcode, transaction_id)
+        # Send PLC response FIRST — the PLC has a tight timeout before the cart
+        # passes the diversion point. DB logging can wait.
         destination = get_destination(barcode, sorter_num)
         prt.send_sorter_response(sorter_num, transaction_id, destination)
-        #logger.log_data(SORTER=sorter_num, TYPE="RESPONSE", TRANSACTION_ID=transaction_id, DESTINATION=destination)
+        # Log to DB after response is sent (non-time-critical)
+        prtdb.store_sorter_request(sorter_num, barcode, transaction_id)
         prtdb.store_sorter_response(sorter_num, transaction_id, barcode, destination)
 
     sorter_report = prt.read_sorter_report(sorter_num)
