@@ -39,10 +39,13 @@ class PRTPLC(PLC):
             return barcode, transaction_id
 
     def send_sorter_response(self, sorter_num: int, transaction_id: int, destination: int):
-        #Write response tags
-        self.write_tag(f'SORTER_{sorter_num}_RESPONSE.TRANSACTION_ID', transaction_id)
-        self.write_tag(f'SORTER_{sorter_num}_RESPONSE.DESTINATION', destination)
-        self.write_tag(f'SORTER_{sorter_num}_RESPONSE.END', 1)
+        # Send all response fields in a single CIP message (~10ms instead of ~40ms).
+        # The PLC has a tight physical timing window before the cart passes the diverter.
+        self.write_tags(
+            (f'SORTER_{sorter_num}_RESPONSE.TRANSACTION_ID', transaction_id),
+            (f'SORTER_{sorter_num}_RESPONSE.DESTINATION', destination),
+            (f'SORTER_{sorter_num}_RESPONSE.END', 1)
+        )
         print(f"SORTER_{sorter_num}_RESPONSE: TRANS_ID: {transaction_id}, DEST: {destination}")
 
     def read_sorter_report(self, sorter_num: int):

@@ -118,6 +118,53 @@ class PLC:
             print(f"PLC: Exception during write of {self.ip_address}: {e}")
             return False
 
+    def write_tags(self, *tag_value_pairs):
+        """
+        Writes multiple tags in a single CIP message (one network round-trip).
+        :param tag_value_pairs: Tuples of (tag_name, value)
+        :return: True on success, False on failure
+        """
+        if self.driver is None:
+            print(f"PLC: Not connected to {self.ip_address} to write. Attempting to connect.")
+            if not self.connect():
+                print(f"PLC: Connect failed; cannot write to {self.ip_address}")
+                return False
+
+        try:
+            responses = self.driver.write(*tag_value_pairs)
+            if not isinstance(responses, list):
+                responses = [responses]
+            if all(r for r in responses):
+                return True
+            for r in responses:
+                if not r:
+                    print(f"PLC: Write failed for tag {r.tag} at IP {self.ip_address}: {r.error}")
+            return False
+        except Exception as e:
+            msg = str(e).lower()
+            if "session must be registered" in msg or "forward open" in msg:
+                print(f"PLC: Session error when writing to {self.ip_address}: {e}. Attempting to reopen connection.")
+                try:
+                    if self.driver is None:
+                        self.driver = LogixDriver(self.ip_address)
+                    self.driver.open()
+                    responses = self.driver.write(*tag_value_pairs)
+                    if not isinstance(responses, list):
+                        responses = [responses]
+                    if all(r for r in responses):
+                        return True
+                    return False
+                except Exception as e2:
+                    print(f"PLC: Write retry failed for {self.ip_address}: {e2}")
+                    try:
+                        self.driver.close()
+                    except Exception:
+                        pass
+                    self.driver = None
+                    return False
+            print(f"PLC: Exception during write of {self.ip_address}: {e}")
+            return False
+
     def close(self):
         """
         Closes the connection to the PLC
