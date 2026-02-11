@@ -25,7 +25,8 @@ class Database:
         self.connection = None
         self.connection = pymysql.connect(
             **config,
-            cursorclass=pymysql.cursors.DictCursor  # Returns dict rows: {'id': 1, 'barcode': '0001'}
+            cursorclass=pymysql.cursors.DictCursor,  # Returns dict rows: {'id': 1, 'barcode': '0001'}
+            autocommit=True  # Ensure each SELECT sees the latest committed data from other connections (frontend)
         )
 
     def query(self, sql, args):
