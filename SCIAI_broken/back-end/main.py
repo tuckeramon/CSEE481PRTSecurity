@@ -206,6 +206,9 @@ def run_system():
                 proxy_firewall.refresh_whitelist()
             LAST_WHITELIST_REFRESH_TIME = current_time
 
+        # Prevent tight-loop CPU starvation and PLC/DB overload
+        sleep(0.05)
+
 def process_sorter(sorter_num: int):
     sorter_request = prt.read_sorter_request(sorter_num)
     if sorter_request is not None:
