@@ -21,6 +21,7 @@ TRACK_POS_PERCENTS = [
 
 class TrackView(QWidget):
     cart_selected = pyqtSignal(str)
+    carts_updated = pyqtSignal(list)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -81,6 +82,7 @@ class TrackView(QWidget):
             if "x" not in cart or "y" not in cart:
                 cart["x"], cart["y"] = cart.get("target_x", 100), cart.get("target_y", 100)
         self.carts = all_carts
+        self.carts_updated.emit([c["id"] for c in all_carts])
         self.update()
 
     def update_carts_from_logs(self):

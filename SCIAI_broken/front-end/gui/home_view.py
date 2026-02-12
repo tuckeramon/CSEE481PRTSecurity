@@ -55,6 +55,45 @@ class HomeView(QWidget):
 
         panel_layout = QVBoxLayout()
 
+        # Cart selection dropdown
+        cart_select_label = QLabel("Select Cart:")
+        cart_select_label.setStyleSheet(
+            """
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            border: 2px solid #002855;
+            border-radius: 6px;
+            padding: 6px 12px;
+            """
+        )
+        panel_layout.addWidget(cart_select_label)
+
+        self.cart_dropdown = QComboBox()
+        self.cart_dropdown.addItem("")
+        self.cart_dropdown.setStyleSheet(
+            """
+            QComboBox {
+                background-color: white;
+                color: #002855;
+                border: 2px solid #002855;
+                border-radius: 6px;
+                padding: 6px 12px;
+                font-size: 16px;
+            }
+            QComboBox QAbstractItemView {
+                background-color: white;
+                selection-background-color: #EAAA00;
+                selection-color: black;
+                border: none;
+                font-size: 16px;
+                padding: 6px;
+                outline: 0;
+            }
+            """
+        )
+        panel_layout.addWidget(self.cart_dropdown)
+
         info_title = QLabel("<b>Cart Information</b>")
         info_title.setAlignment(Qt.AlignCenter)
         info_title.setStyleSheet(
@@ -231,6 +270,15 @@ class HomeView(QWidget):
         self.send_button.clicked.connect(self.send_cart_to_station_clicked)
         self.remove_button.clicked.connect(self.remove_active_cart_clicked)
 
+        # Connect cart dropdown selection to map highlight
+        self.cart_dropdown.currentIndexChanged.connect(self.on_cart_dropdown_changed)
+
+        # Connect map click to update cart dropdown
+        self.track_view.cart_selected.connect(self.sync_cart_dropdown_to_selection)
+
+        # Connect cart list refresh to repopulate dropdown
+        self.track_view.carts_updated.connect(self.refresh_cart_dropdown)
+
         # Connect dropdown changes to button state updates
         self.station_dropdown.currentIndexChanged.connect(self.buttons_enabled)
         self.area_dropdown.currentIndexChanged.connect(self.buttons_enabled)
@@ -286,4 +334,35 @@ class HomeView(QWidget):
         remove_cart(cart_id, area)
         self.info_label.setText(f"Removed cart {cart_id} to area {area}.")
         self.buttons_enabled()
+
+    def on_cart_dropdown_changed(self, index):
+        """When user selects a cart from the dropdown, highlight it on the map."""
+        cart_id = self.cart_dropdown.currentText()
+        if not cart_id:
+            return
+        self.track_view.selected_cart_id = cart_id
+        self.track_view.update()
+        self.display_cart_info(cart_id)
+
+    def sync_cart_dropdown_to_selection(self, cart_id):
+        """When user clicks a dot on the map, update the dropdown to match."""
+        self.cart_dropdown.blockSignals(True)
+        idx = self.cart_dropdown.findText(cart_id)
+        if idx >= 0:
+            self.cart_dropdown.setCurrentIndex(idx)
+        self.cart_dropdown.blockSignals(False)
+
+    def refresh_cart_dropdown(self, cart_ids):
+        """Repopulate the cart dropdown when the cart list refreshes."""
+        previous = self.cart_dropdown.currentText()
+        self.cart_dropdown.blockSignals(True)
+        self.cart_dropdown.clear()
+        self.cart_dropdown.addItem("")
+        for cid in sorted(cart_ids):
+            self.cart_dropdown.addItem(cid)
+        # Restore previous selection if still present
+        idx = self.cart_dropdown.findText(previous)
+        if idx >= 0:
+            self.cart_dropdown.setCurrentIndex(idx)
+        self.cart_dropdown.blockSignals(False)
     
