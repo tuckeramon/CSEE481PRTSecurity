@@ -74,6 +74,8 @@ def get_destination(barcode: str, sorter_num: int):
         print(f"GET_DEST: barcode {barcode} not found in PRTCarts, defaulting to straight-through")
         return 0
     physical_dest = result['destination']
+    if physical_dest == 0:
+        return 0
     dest_rt = prt_get_dest_route(physical_dest)
     dest = dest_rt[sorter_num]
     print(f"GET_DEST: barcode: {barcode}, sorter_num: {sorter_num}, physical_dest: {physical_dest}, dest_rt: {dest_rt}, dest: {dest}")
@@ -211,6 +213,9 @@ def run_system():
         sleep(0.01)
 
 def process_sorter(sorter_num: int):
+    # Track the last-determined destination for this loop iteration.
+    # Initialize to None so we can tell if a request set it.
+    destination = None
     sorter_request = prt.read_sorter_request(sorter_num)
     if sorter_request is not None:
         print(f'Sorter_Request: {sorter_request}')
@@ -231,6 +236,19 @@ def process_sorter(sorter_num: int):
         #logger.log_data(SORTER=sorter_num, TYPE="REPORT", BARCODE=barcode, ACTIVE=active, LOST=lost, GOOD=good, DIVERTED=diverted)
         barcode = process_barcode(barcode)
         prtdb.store_sorter_report(sorter_num, barcode, active, lost, good, diverted)
+        # Clear destination to avoid repeatedly diverting the same cart.
+        # Only clear if the stored destination equals the last response we sent
+        # (prevents wiping a newer frontend update).
+        try:
+            latest_resp_dest = prtdb.get_latest_response_destination(str(barcode).zfill(4))
+            current_dest_record = prtdb.get_destination_info(str(barcode).zfill(4))
+            if latest_resp_dest is not None and current_dest_record:
+                current_dest = current_dest_record.get('destination')
+                if current_dest == latest_resp_dest and current_dest != 0:
+                    prtdb.update_destination_info(barcode, 0)
+        except Exception as e:
+            # Don't let logging/DB helper failures stop the main loop; print a warning.
+            print(f"Warning: failed to clear destination after report: {e}")
 
 
 def tes_system():

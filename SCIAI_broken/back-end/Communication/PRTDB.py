@@ -225,6 +225,24 @@ class PRTDB(Database):
         if not result:
             return None
         return result[0]
+
+    def get_latest_response_destination(self, barcode: str):
+        """
+        Return the most recent destination sent in PRTSorterResponse for this barcode.
+        Returns None if no response exists.
+        """
+        # The unified DB schema uses `timestamp` as the canonical column name.
+        query = """
+        SELECT destination
+        FROM PRTSorterResponse
+        WHERE barcode = %s
+        ORDER BY timestamp DESC
+        LIMIT 1
+        """
+        rows = self.fetch(query, (barcode,))
+        if not rows:
+            return None
+        return rows[0].get('destination')
     
     def get_destinations_info(self):
         """
