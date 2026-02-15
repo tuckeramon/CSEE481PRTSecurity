@@ -309,3 +309,169 @@ def insert_remove_cart_command(barcode, area):
     except Exception as e:
         print(f"Error inserting removal command: {e}")
         return False
+
+
+# =========================================================================
+# SECURITY DASHBOARD QUERY FUNCTIONS
+# =========================================================================
+
+def fetch_security_logs(severity=None, event_type=None, plc_ip=None, since_time=None, limit=500):
+    """Fetch security events from PLCSecurityLogs with optional filters."""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        query = """
+            SELECT id, plc_ip, plc_name, event_type, severity, event_code,
+                   event_message, previous_state, current_state, plc_timestamp, timestamp
+            FROM PLCSecurityLogs
+        """
+        conditions = []
+        params = []
+        if severity:
+            conditions.append("severity = %s")
+            params.append(severity)
+        if event_type:
+            conditions.append("event_type = %s")
+            params.append(event_type)
+        if plc_ip:
+            conditions.append("plc_ip = %s")
+            params.append(plc_ip)
+        if since_time:
+            conditions.append("timestamp >= %s")
+            params.append(since_time)
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+        query += " ORDER BY timestamp DESC LIMIT %s"
+        params.append(limit)
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return rows
+    except Exception as e:
+        print(f"Error fetching security logs: {e}")
+        return []
+
+
+def fetch_security_alerts(severity=None, event_type=None, plc_ip=None, acknowledged=None, since_time=None, limit=200):
+    """Fetch correlated alerts from PLCSecurityAlerts with optional filters."""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        query = """
+            SELECT id, alert_id, rule_id, rule_level, rule_description,
+                   plc_ip, event_type, severity, event_message,
+                   matched_event_count, time_window_seconds,
+                   acknowledged, acknowledged_by, acknowledged_at, detected_at
+            FROM PLCSecurityAlerts
+        """
+        conditions = []
+        params = []
+        if severity:
+            conditions.append("severity = %s")
+            params.append(severity)
+        if event_type:
+            conditions.append("event_type = %s")
+            params.append(event_type)
+        if plc_ip:
+            conditions.append("plc_ip = %s")
+            params.append(plc_ip)
+        if acknowledged is not None:
+            conditions.append("acknowledged = %s")
+            params.append(1 if acknowledged else 0)
+        if since_time:
+            conditions.append("detected_at >= %s")
+            params.append(since_time)
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+        query += " ORDER BY detected_at DESC LIMIT %s"
+        params.append(limit)
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return rows
+    except Exception as e:
+        print(f"Error fetching security alerts: {e}")
+        return []
+
+
+def fetch_security_summary_stats():
+    """Fetch summary counts for the security dashboard stat cards."""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        stats = {}
+
+        cursor.execute(
+            "SELECT COUNT(*) AS cnt FROM PLCSecurityLogs WHERE timestamp >= DATE_SUB(NOW(), INTERVAL 24 HOUR)"
+        )
+        stats["total_events_24h"] = cursor.fetchone()["cnt"]
+
+        cursor.execute("""
+            SELECT severity, COUNT(*) AS cnt
+            FROM PLCSecurityLogs
+            WHERE timestamp >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+            GROUP BY severity
+        """)
+        severity_counts = {row["severity"]: row["cnt"] for row in cursor.fetchall()}
+        stats["critical_count"] = severity_counts.get("CRITICAL", 0)
+        stats["error_count"] = severity_counts.get("ERROR", 0)
+        stats["warning_count"] = severity_counts.get("WARNING", 0)
+        stats["info_count"] = severity_counts.get("INFO", 0)
+
+        cursor.execute(
+            "SELECT COUNT(*) AS cnt FROM PLCSecurityAlerts WHERE acknowledged = 0"
+        )
+        stats["unacknowledged_alerts"] = cursor.fetchone()["cnt"]
+
+        cursor.close()
+        conn.close()
+        return stats
+    except Exception as e:
+        print(f"Error fetching security summary stats: {e}")
+        return {
+            "total_events_24h": 0, "critical_count": 0, "error_count": 0,
+            "warning_count": 0, "info_count": 0, "unacknowledged_alerts": 0
+        }
+
+
+def acknowledge_security_alert(alert_id, acknowledged_by=None):
+    """Mark a correlated alert as acknowledged. Returns True on success."""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            UPDATE PLCSecurityAlerts
+            SET acknowledged = 1,
+                acknowledged_by = %s,
+                acknowledged_at = NOW()
+            WHERE id = %s AND acknowledged = 0
+            """,
+            (acknowledged_by, alert_id)
+        )
+        affected = cursor.rowcount
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return affected > 0
+    except Exception as e:
+        print(f"Error acknowledging alert: {e}")
+        return False
+
+
+def fetch_distinct_plc_ips():
+    """Fetch all distinct PLC IPs from security logs for the filter dropdown."""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT DISTINCT plc_ip FROM PLCSecurityLogs ORDER BY plc_ip")
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return [row["plc_ip"] for row in rows]
+    except Exception as e:
+        print(f"Error fetching PLC IPs: {e}")
+        return []

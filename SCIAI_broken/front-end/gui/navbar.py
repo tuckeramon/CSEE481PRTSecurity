@@ -48,6 +48,11 @@ class NavBar(QWidget):
         self.activity_btn.setCheckable(True)
         layout.addWidget(self.activity_btn)
 
+        self.security_btn = QPushButton("Security")
+        self.security_btn.setCursor(Qt.PointingHandCursor)
+        self.security_btn.setCheckable(True)
+        layout.addWidget(self.security_btn)
+
         # Add admin-only button
         if user["role"] == "admin":
             self.manage_users_btn = QPushButton("Manage Users")
@@ -110,16 +115,26 @@ class NavBar(QWidget):
         # Switch state behavior
         self.dashboard_btn.clicked.connect(self.set_dashboard_active)
         self.activity_btn.clicked.connect(self.set_activity_active)
+        self.security_btn.clicked.connect(self.set_security_active)
 
     def set_dashboard_active(self):
         self.dashboard_btn.setChecked(True)
         self.activity_btn.setChecked(False)
+        self.security_btn.setChecked(False)
         if self.manage_users_btn:
             self.manage_users_btn.setChecked(False)
 
     def set_activity_active(self):
         self.dashboard_btn.setChecked(False)
         self.activity_btn.setChecked(True)
+        self.security_btn.setChecked(False)
+        if self.manage_users_btn:
+            self.manage_users_btn.setChecked(False)
+
+    def set_security_active(self):
+        self.dashboard_btn.setChecked(False)
+        self.activity_btn.setChecked(False)
+        self.security_btn.setChecked(True)
         if self.manage_users_btn:
             self.manage_users_btn.setChecked(False)
 
@@ -127,4 +142,5 @@ class NavBar(QWidget):
         if self.manage_users_btn:
             self.dashboard_btn.setChecked(False)
             self.activity_btn.setChecked(False)
+            self.security_btn.setChecked(False)
             self.manage_users_btn.setChecked(True)
