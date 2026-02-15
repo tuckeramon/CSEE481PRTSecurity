@@ -38,6 +38,7 @@ class _DataLoadWorker(QThread):
                 severity=severity, event_type=event_type,
                 plc_ip=plc_ip, since_time=since_time
             ),
+            "plc_ips": fetch_distinct_plc_ips(),
         }
         self.finished.emit(result)
 
@@ -363,8 +364,7 @@ class SecurityLogView(QWidget):
         # Populate PLC IP dropdown on first successful load
         if not self._plc_ips_loaded:
             self._plc_ips_loaded = True
-            ips = fetch_distinct_plc_ips()
-            for ip in ips:
+            for ip in result.get("plc_ips", []):
                 self.plc_ip_filter.addItem(ip, ip)
 
         # Update stat cards
@@ -372,11 +372,14 @@ class SecurityLogView(QWidget):
         for key, label in self.stat_labels.items():
             label.setText(str(stats.get(key, 0)))
 
-        # Update alerts table
+        # Update tables with repainting suspended
+        self.alerts_table.setUpdatesEnabled(False)
         self._populate_alerts_table(result.get("alerts", []))
+        self.alerts_table.setUpdatesEnabled(True)
 
-        # Update logs table
+        self.logs_table.setUpdatesEnabled(False)
         self._populate_logs_table(result.get("logs", []))
+        self.logs_table.setUpdatesEnabled(True)
 
     def _populate_alerts_table(self, alerts):
         self.alerts_table.setRowCount(len(alerts))

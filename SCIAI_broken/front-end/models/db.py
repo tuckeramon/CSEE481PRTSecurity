@@ -315,7 +315,7 @@ def insert_remove_cart_command(barcode, area):
 # SECURITY DASHBOARD QUERY FUNCTIONS
 # =========================================================================
 
-def fetch_security_logs(severity=None, event_type=None, plc_ip=None, since_time=None, limit=500):
+def fetch_security_logs(severity=None, event_type=None, plc_ip=None, since_time=None, limit=100):
     """Fetch security events from PLCSecurityLogs with optional filters."""
     try:
         conn = get_connection()
@@ -353,7 +353,7 @@ def fetch_security_logs(severity=None, event_type=None, plc_ip=None, since_time=
         return []
 
 
-def fetch_security_alerts(severity=None, event_type=None, plc_ip=None, acknowledged=None, since_time=None, limit=200):
+def fetch_security_alerts(severity=None, event_type=None, plc_ip=None, acknowledged=None, since_time=None, limit=50):
     """Fetch correlated alerts from PLCSecurityAlerts with optional filters."""
     try:
         conn = get_connection()
