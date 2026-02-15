@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (
     QComboBox, QDateTimeEdit, QPushButton, QHeaderView, QFrame,
     QSplitter, QMessageBox
 )
-from PyQt5.QtCore import QDateTime, Qt, QTimer
+from PyQt5.QtCore import QDateTime, Qt, QTimer, QThread, pyqtSignal
 from PyQt5 import QtGui
 from models.db import (
     fetch_security_logs, fetch_security_alerts, fetch_security_summary_stats,
@@ -18,10 +18,36 @@ SEVERITY_COLORS = {
 }
 
 
+class _DataLoadWorker(QThread):
+    """Runs all security DB queries off the main thread."""
+    finished = pyqtSignal(dict)
+
+    def __init__(self, filters):
+        super().__init__()
+        self.filters = filters
+
+    def run(self):
+        severity, event_type, plc_ip, since_time = self.filters
+        result = {
+            "stats": fetch_security_summary_stats(),
+            "alerts": fetch_security_alerts(
+                severity=severity, event_type=event_type,
+                plc_ip=plc_ip, since_time=since_time
+            ),
+            "logs": fetch_security_logs(
+                severity=severity, event_type=event_type,
+                plc_ip=plc_ip, since_time=since_time
+            ),
+        }
+        self.finished.emit(result)
+
+
 class SecurityLogView(QWidget):
     def __init__(self, user):
         super().__init__()
         self.user = user
+        self._worker = None
+        self._loading = False
         self.init_ui()
         self.setup_auto_refresh()
 
@@ -58,7 +84,6 @@ class SecurityLogView(QWidget):
         main_layout.addWidget(filter_panel, 1)
 
         self.setLayout(main_layout)
-        self.load_all_data()
 
     # -----------------------------------------------------------------
     # Build UI sections
@@ -66,7 +91,7 @@ class SecurityLogView(QWidget):
 
     def _build_stat_cards(self):
         container = QWidget()
-        container.setFixedHeight(120)
+        container.setFixedHeight(140)
         layout = QHBoxLayout(container)
         layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(10)
@@ -113,10 +138,10 @@ class SecurityLogView(QWidget):
         container = QWidget()
         container.setStyleSheet("""
             background: #fff; border-radius: 12px;
-            padding: 12px; border: 1px solid #e0e0e0;
+            border: 1px solid #e0e0e0;
         """)
         layout = QVBoxLayout(container)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(12, 8, 12, 8)
 
         header_label = QLabel("Correlated Security Alerts")
         header_label.setStyleSheet("color: #002855; font-size: 16px; font-weight: bold; padding: 5px; background: transparent; border: none;")
@@ -163,10 +188,10 @@ class SecurityLogView(QWidget):
         container = QWidget()
         container.setStyleSheet("""
             background: #fff; border-radius: 12px;
-            padding: 12px; border: 1px solid #e0e0e0;
+            border: 1px solid #e0e0e0;
         """)
         layout = QVBoxLayout(container)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(12, 8, 12, 8)
 
         header_label = QLabel("Raw Security Events")
         header_label.setStyleSheet("color: #002855; font-size: 16px; font-weight: bold; padding: 5px; background: transparent; border: none;")
@@ -244,16 +269,15 @@ class SecurityLogView(QWidget):
             self.event_type_filter.addItem(et, et)
         filter_layout.addWidget(self.event_type_filter)
 
-        # PLC IP filter
+        # PLC IP filter (populated on first load, not during init)
         ip_label = QLabel("PLC IP:")
         ip_label.setStyleSheet("color: #002855; font-weight: bold;")
         filter_layout.addWidget(ip_label)
         self.plc_ip_filter = QComboBox()
         self.plc_ip_filter.setStyleSheet("color: #002855; font-weight: bold;")
         self.plc_ip_filter.addItem("All", None)
-        for ip in fetch_distinct_plc_ips():
-            self.plc_ip_filter.addItem(ip, ip)
         filter_layout.addWidget(self.plc_ip_filter)
+        self._plc_ips_loaded = False
 
         # Time range
         since_label = QLabel("Since:")
@@ -303,7 +327,7 @@ class SecurityLogView(QWidget):
         return filter_panel
 
     # -----------------------------------------------------------------
-    # Data loading
+    # Data loading (background thread)
     # -----------------------------------------------------------------
 
     def _on_time_filter_changed(self):
@@ -322,22 +346,39 @@ class SecurityLogView(QWidget):
         return severity, event_type, plc_ip, since_time
 
     def load_all_data(self):
-        self.load_summary_stats()
-        self.load_alerts()
-        self.load_logs()
+        """Kick off a background thread to fetch all data."""
+        if self._loading:
+            return  # Skip if a load is already in progress
 
-    def load_summary_stats(self):
-        stats = fetch_security_summary_stats()
+        self._loading = True
+        filters = self._get_current_filters()
+        self._worker = _DataLoadWorker(filters)
+        self._worker.finished.connect(self._on_data_loaded)
+        self._worker.start()
+
+    def _on_data_loaded(self, result):
+        """Called on main thread when the worker finishes."""
+        self._loading = False
+
+        # Populate PLC IP dropdown on first successful load
+        if not self._plc_ips_loaded:
+            self._plc_ips_loaded = True
+            ips = fetch_distinct_plc_ips()
+            for ip in ips:
+                self.plc_ip_filter.addItem(ip, ip)
+
+        # Update stat cards
+        stats = result.get("stats", {})
         for key, label in self.stat_labels.items():
             label.setText(str(stats.get(key, 0)))
 
-    def load_alerts(self):
-        severity, event_type, plc_ip, since_time = self._get_current_filters()
-        alerts = fetch_security_alerts(
-            severity=severity, event_type=event_type,
-            plc_ip=plc_ip, since_time=since_time
-        )
+        # Update alerts table
+        self._populate_alerts_table(result.get("alerts", []))
 
+        # Update logs table
+        self._populate_logs_table(result.get("logs", []))
+
+    def _populate_alerts_table(self, alerts):
         self.alerts_table.setRowCount(len(alerts))
         for i, alert in enumerate(alerts):
             sev = alert.get("severity", "")
@@ -411,13 +452,7 @@ class SecurityLogView(QWidget):
             else:
                 QMessageBox.warning(self, "Error", "Failed to acknowledge alert. It may already be acknowledged.")
 
-    def load_logs(self):
-        severity, event_type, plc_ip, since_time = self._get_current_filters()
-        logs = fetch_security_logs(
-            severity=severity, event_type=event_type,
-            plc_ip=plc_ip, since_time=since_time
-        )
-
+    def _populate_logs_table(self, logs):
         self.logs_table.setRowCount(len(logs))
         for i, log in enumerate(logs):
             sev = log.get("severity", "")
