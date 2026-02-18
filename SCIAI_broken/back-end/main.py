@@ -237,15 +237,20 @@ def process_sorter(sorter_num: int):
         barcode = process_barcode(barcode)
         prtdb.store_sorter_report(sorter_num, barcode, active, lost, good, diverted)
         # Clear destination to avoid repeatedly diverting the same cart.
-        # Only clear if the stored destination equals the last response we sent
-        # (prevents wiping a newer frontend update).
+        # Only clear if this sorter actually diverted the cart (destination was
+        # an active divert code like 1 or 2). If the destination was 3
+        # (pass-through), the cart still needs to be routed by the next sorter,
+        # so we must NOT clear it.
         try:
-            latest_resp_dest = prtdb.get_latest_response_destination(str(barcode).zfill(4))
             current_dest_record = prtdb.get_destination_info(str(barcode).zfill(4))
-            if latest_resp_dest is not None and current_dest_record:
+            if current_dest_record:
                 current_dest = current_dest_record.get('destination')
-                if current_dest == latest_resp_dest and current_dest != 0:
-                    prtdb.update_destination_info(barcode, 0)
+                if current_dest and current_dest != 0:
+                    dest_rt = prt_get_dest_route(current_dest)
+                    sorter_code = dest_rt[sorter_num] if dest_rt else None
+                    # Only clear if this sorter's code was an active divert (not pass-through 3)
+                    if sorter_code is not None and sorter_code != 3:
+                        prtdb.update_destination_info(barcode, 0)
         except Exception as e:
             # Don't let logging/DB helper failures stop the main loop; print a warning.
             print(f"Warning: failed to clear destination after report: {e}")
