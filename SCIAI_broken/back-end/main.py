@@ -84,13 +84,10 @@ def get_destination(barcode: str, sorter_num: int):
 def process_barcode(barcode: str):
     if len(barcode) != 4:
         return "0000"
-    elif barcode[0] < '0' or barcode[0] > '9':
-        return "0000"
-    elif barcode[1] < '0' or barcode[1] > '9':
-        return "0000"
-    elif barcode[2] < '0' or barcode[2] > '9':
-        return "0000"
-    elif barcode[3] < '0' or barcode[3] > '9':
+    for ch in barcode:
+        if ch < '0' or ch > '9':
+            return "0000"
+    if int(barcode) < 1 or int(barcode) > 10:
         return "0000"
     return barcode
 
@@ -226,15 +223,20 @@ def process_sorter(sorter_num: int):
         # passes the diversion point. DB logging can wait.
         destination = get_destination(barcode, sorter_num)
         prt.send_sorter_response(sorter_num, transaction_id, destination)
-        # Log to DB after response is sent (non-time-critical)
-        prtdb.store_sorter_request(sorter_num, barcode, transaction_id)
-        prtdb.store_sorter_response(sorter_num, transaction_id, barcode, destination)
+        # Only log valid barcodes to DB — erroneous scanner reads should not
+        # pollute the database tables or cart_logs.
+        if barcode != "0000":
+            prtdb.store_sorter_request(sorter_num, barcode, transaction_id)
+            prtdb.store_sorter_response(sorter_num, transaction_id, barcode, destination)
 
     sorter_report = prt.read_sorter_report(sorter_num)
     if sorter_report is not None:
         barcode, active, lost, good, diverted = sorter_report
         #logger.log_data(SORTER=sorter_num, TYPE="REPORT", BARCODE=barcode, ACTIVE=active, LOST=lost, GOOD=good, DIVERTED=diverted)
         barcode = process_barcode(barcode)
+        if barcode == "0000":
+            print(f"Warning: invalid barcode from sorter {sorter_num} report, skipping")
+            return
         prtdb.store_sorter_report(sorter_num, barcode, active, lost, good, diverted)
         # Clear destination to avoid repeatedly diverting the same cart.
         # Only clear if this sorter actually diverted the cart (destination was
