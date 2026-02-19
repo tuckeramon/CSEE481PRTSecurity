@@ -1,0 +1,86 @@
+networks:
+  simulation_lan:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
+
+services:
+  # PRT PLC Controller
+  plc_primary:
+    build: ./plc
+    container_name: ab_plc_51
+    networks:
+      simulation_lan:
+        ipv4_address: 192.168.1.51
+    ports:
+      - "502:502"       # Modbus
+      - "44818:44818"   # EtherNet/IP
+      - "8081:8080"     # Web interface
+    restart: unless-stopped
+
+  # PRT Database
+  db_server:
+    build: ./db
+    container_name: mgt_db_30
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: prt_system
+    networks:
+      simulation_lan:
+        ipv4_address: 192.168.1.30
+    ports:
+      - "3306:3306"
+    restart: unless-stopped
+
+  # PRT HMI Dashboard
+  panelview-hmi:
+    build: ./hmi
+    container_name: ab_hmi_70
+    networks:
+      simulation_lan:
+        ipv4_address: 192.168.1.70
+    ports:
+      - "8080:8080"
+    depends_on:
+      - plc_primary
+      - db_server
+    restart: unless-stopped
+
+  # Network Switch
+  switch_mgmt:
+    build: ./switch
+    container_name: schneider_switch_200
+    networks:
+      simulation_lan:
+        ipv4_address: 192.168.1.200
+    ports:
+      - "2222:22"       # SSH
+      - "8082:80"       # Web
+    restart: unless-stopped
+
+  # SIEM System
+  siem-agent:
+    build: ./siem
+    container_name: blue_team_siem
+    networks:
+      simulation_lan:
+        ipv4_address: 192.168.1.20
+    ports:
+      - "1514:1514"     # Syslog
+      - "55000:55000"   # API
+      - "9200:9200"     # Elasticsearch
+    restart: unless-stopped
+
+  # Red Team Attack Platform
+  kali-agent:
+    build: ./redteam
+    container_name: red_team_beachhead
+    networks:
+      simulation_lan:
+        ipv4_address: 192.168.1.10
+    ports:
+      - "8000:8000"
+    tty: true
+    stdin_open: true
+    restart: unless-stopped
