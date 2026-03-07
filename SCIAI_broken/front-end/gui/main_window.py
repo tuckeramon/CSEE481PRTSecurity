@@ -18,18 +18,15 @@ class MainWindow(QMainWindow):
         self.user = user
 
         try:
+            role = self.user.get("role", "viewer")
+
             # Create navigation bar
             self.navbar = NavBar(self.user)
-            if self.navbar.manage_users_btn and self.manage_users_view:
-                self.navbar.manage_users_btn.clicked.connect(lambda: [self.stack.setCurrentWidget(self.manage_users_view), self.navbar.set_manage_users_active()])
             self.navbar.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-
-            role = self.user.get("role", "viewer")
 
             # Create views
             self.home_view = HomeView()
             self.activity_view = ActivityLogView(self.db_conn)
-
             self.security_view = SecurityLogView(self.user) if role in ("admin", "operator") else None
             self.manage_users_view = ManageUsersView() if role == "admin" else None
 
@@ -47,6 +44,8 @@ class MainWindow(QMainWindow):
             self.navbar.activity_btn.clicked.connect(lambda: [self.stack.setCurrentIndex(1), self.navbar.set_activity_active()])
             if self.navbar.security_btn and self.security_view:
                 self.navbar.security_btn.clicked.connect(lambda: [self.stack.setCurrentWidget(self.security_view), self.navbar.set_security_active()])
+            if self.navbar.manage_users_btn and self.manage_users_view:
+                self.navbar.manage_users_btn.clicked.connect(lambda: [self.stack.setCurrentWidget(self.manage_users_view), self.navbar.set_manage_users_active()])
 
             # Create main layout
             central_widget = QWidget()
