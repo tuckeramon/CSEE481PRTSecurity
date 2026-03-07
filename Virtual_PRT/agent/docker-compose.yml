@@ -1,0 +1,32 @@
+services:
+  # Local LLM da brains
+  ollama:
+    image: ollama/ollama:latest
+    container_name: agent_brain
+    volumes:
+      - ./ollama_data:/root/.ollama
+    # nvidia pass through
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # Agent home with tools
+  offensive-agent:
+    build: .
+    container_name: red_team_aagent
+    network_mode: "host"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_HOST=http://localhost:11434
+    volumes:
+      - ./scripts:/home/agent/scripts
+    stdin_open: true
+    tty: true
