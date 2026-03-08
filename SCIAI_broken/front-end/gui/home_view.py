@@ -267,8 +267,6 @@ class HomeView(QWidget):
             font-size: 16px;
             font-weight: bold;
             color: white;
-            border: 2px solid #002855;
-            border-radius: 6px;
             padding: 6px 12px;
             """
         )
@@ -435,11 +433,12 @@ class HomeView(QWidget):
                 QCheckBox {
                     color: #002855;
                     font-size: 14px;
+                    border: none;
                 }
                 QCheckBox::indicator {
                     width: 16px;
                     height: 16px;
-                    border: 2px solid #002855;
+                    border: none;
                     border-radius: 3px;
                     background-color: white;
                 }
@@ -465,11 +464,8 @@ class HomeView(QWidget):
     def _apply_test_bench_selection(self):
         """Collect checked cart IDs and update the track view display."""
         checked_ids = [cid for cid, cb in self.cart_checkboxes.items() if cb.isChecked()]
-        if checked_ids:
-            self.track_view.set_visible_cart_ids(checked_ids)
-        else:
-            # If none checked, show none (user must select at least one to see carts)
-            self.track_view.set_visible_cart_ids([])
+        self.track_view.set_visible_cart_ids(checked_ids)
+        self.track_view.repaint()
 
     def select_all_test_bench_carts(self):
         """Check all cart checkboxes."""

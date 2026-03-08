@@ -273,21 +273,16 @@ class TrackView(QWidget):
             painter.setPen(QPen(Qt.black, 2))
             painter.drawText(int(x) - 30, int(y) - 15, name.replace("_", " "))
 
-        # Draw carts (on the path, at segment or station entrance positions)
+        # Draw carts (on the path) as circles using stored x,y
         for cart in self.carts:
-            pos_name = cart.get("position")
-            if pos_name in abs_pos:
-                cart_x, cart_y = abs_pos[pos_name]
-                cart["x"], cart["y"] = cart_x, cart_y
-            else:
-                cart_x, cart_y = cart.get("x", 0), cart.get("y", 0)
+            cart_x, cart_y = cart.get("x", 0), cart.get("y", 0)
             if cart.get("id") == self.selected_cart_id:
                 painter.setBrush(QColor("#FFD700"))
             else:
                 painter.setBrush(QColor("#EAAA00"))
             painter.setPen(Qt.black)
-            painter.drawEllipse(int(cart_x) - self.cart_radius, int(cart_y) - self.cart_radius,
-                                self.cart_radius * 2, self.cart_radius * 2)
+            r = self.cart_radius
+            painter.drawEllipse(int(cart_x) - r, int(cart_y) - r, r * 2, r * 2)
             painter.drawText(int(cart_x) - 10, int(cart_y) + 30, cart["id"])
 
     def mousePressEvent(self, event):
