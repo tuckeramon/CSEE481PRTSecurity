@@ -31,6 +31,7 @@ class TrackView(QWidget):
         self.selected_cart_id = None
         self.cart_radius = 15
         self.carts = []
+        self._visible_cart_ids = None  # None = show all carts; set = only show these
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_cart_positions)
@@ -45,7 +46,30 @@ class TrackView(QWidget):
             {"id": "C2", "position": "Segment_B", "status": "Idle"},
         ])
 
+    def set_visible_cart_ids(self, cart_ids):
+        """Set which carts to display on the live view. None = show all."""
+        self._visible_cart_ids = set(cart_ids) if cart_ids is not None else None
+        # Re-apply filter with current data (don't emit - avoids refresh loop)
+        if hasattr(self, '_all_carts_data'):
+            self._apply_cart_filter(emit_updated=False)
+
     def set_carts(self, carts):
+        """Store all carts and apply visibility filter for display."""
+        self._all_carts_data = list(carts)
+        self._apply_cart_filter()
+
+    def _apply_cart_filter(self, emit_updated=True):
+        """Filter self.carts based on _visible_cart_ids using _all_carts_data."""
+        if self._visible_cart_ids is None:
+            carts_to_use = self._all_carts_data
+        else:
+            carts_to_use = [c for c in self._all_carts_data if c["id"] in self._visible_cart_ids]
+        self._set_carts_internal(carts_to_use)
+        if emit_updated:
+            self.carts_updated.emit([c["id"] for c in self._all_carts_data])
+
+    def _set_carts_internal(self, carts):
+        """Internal: position and store carts for display."""
         abs_pos = self.get_absolute_positions_for_carts()
         # Group carts by position
         position_groups = {}
@@ -82,7 +106,6 @@ class TrackView(QWidget):
             if "x" not in cart or "y" not in cart:
                 cart["x"], cart["y"] = cart.get("target_x", 100), cart.get("target_y", 100)
         self.carts = all_carts
-        self.carts_updated.emit([c["id"] for c in all_carts])
         self.update()
 
     def update_carts_from_logs(self):

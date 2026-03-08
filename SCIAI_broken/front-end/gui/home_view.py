@@ -1,4 +1,7 @@
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QFrame, QVBoxLayout, QLabel, QSizePolicy, QPushButton, QComboBox
+from PyQt5.QtWidgets import (
+    QWidget, QHBoxLayout, QFrame, QVBoxLayout, QLabel, QSizePolicy,
+    QPushButton, QComboBox, QCheckBox, QGridLayout
+)
 from PyQt5.QtCore import Qt
 from gui.track_view import TrackView
 from models.db import get_cart_info, remove_cart_request
@@ -257,6 +260,48 @@ class HomeView(QWidget):
         # Add the row to the panel layout
         panel_layout.addLayout(button_row)
 
+        # Carts on Test Bench - checkbox area (below buttons, two columns)
+        test_bench_label = QLabel("Carts on Test Bench:")
+        test_bench_label.setStyleSheet(
+            """
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            border: 2px solid #002855;
+            border-radius: 6px;
+            padding: 6px 12px;
+            """
+        )
+        panel_layout.addWidget(test_bench_label)
+
+        self.test_bench_container = QWidget()
+        self.test_bench_layout = QGridLayout()
+        self.test_bench_layout.setContentsMargins(4, 4, 4, 4)
+        self.test_bench_layout.setSpacing(4)
+        self.test_bench_container.setLayout(self.test_bench_layout)
+        panel_layout.addWidget(self.test_bench_container)
+
+        self.cart_checkboxes = {}  # cart_id -> QCheckBox
+        self._updating_checkboxes = False  # prevent recursive updates
+
+        test_bench_buttons = QHBoxLayout()
+        self.select_all_btn = QPushButton("Select All")
+        self.deselect_all_btn = QPushButton("Deselect All")
+        for btn in (self.select_all_btn, self.deselect_all_btn):
+            btn.setStyleSheet(
+                """
+                QPushButton {
+                    background-color: white;
+                    color: #002855;
+                    border-radius: 4px;
+                    padding: 4px 8px;
+                    font-size: 12px;
+                }
+                """
+            )
+        test_bench_buttons.addWidget(self.select_all_btn)
+        test_bench_buttons.addWidget(self.deselect_all_btn)
+        panel_layout.addLayout(test_bench_buttons)
 
         panel_layout.addStretch()
         self.panel_frame.setLayout(panel_layout)
@@ -276,8 +321,13 @@ class HomeView(QWidget):
         # Connect map click to update cart dropdown
         self.track_view.cart_selected.connect(self.sync_cart_dropdown_to_selection)
 
-        # Connect cart list refresh to repopulate dropdown
+        # Connect cart list refresh to repopulate dropdown and checkboxes
         self.track_view.carts_updated.connect(self.refresh_cart_dropdown)
+        self.track_view.carts_updated.connect(self.refresh_test_bench_checkboxes)
+
+        # Connect test bench checkbox actions
+        self.select_all_btn.clicked.connect(self.select_all_test_bench_carts)
+        self.deselect_all_btn.clicked.connect(self.deselect_all_test_bench_carts)
 
         # Connect dropdown changes to button state updates
         self.station_dropdown.currentIndexChanged.connect(self.buttons_enabled)
@@ -365,4 +415,74 @@ class HomeView(QWidget):
         if idx >= 0:
             self.cart_dropdown.setCurrentIndex(idx)
         self.cart_dropdown.blockSignals(False)
-    
+
+    def refresh_test_bench_checkboxes(self, cart_ids):
+        """Repopulate the test bench checkboxes when the cart list refreshes."""
+        self._updating_checkboxes = True
+        previously_checked = {cid for cid, cb in self.cart_checkboxes.items() if cb.isChecked()}
+
+        # Clear existing checkboxes
+        for cb in self.cart_checkboxes.values():
+            cb.deleteLater()
+        self.cart_checkboxes.clear()
+
+        # Create new checkboxes for each cart (two columns)
+        for idx, cid in enumerate(sorted(cart_ids)):
+            cb = QCheckBox(cid)
+            cb.setChecked(cid in previously_checked if previously_checked else True)
+            cb.setStyleSheet(
+                """
+                QCheckBox {
+                    color: #002855;
+                    font-size: 14px;
+                }
+                QCheckBox::indicator {
+                    width: 16px;
+                    height: 16px;
+                    border: 2px solid #002855;
+                    border-radius: 3px;
+                    background-color: white;
+                }
+                QCheckBox::indicator:checked {
+                    background-color: #EAAA00;
+                }
+                """
+            )
+            cb.stateChanged.connect(self.on_test_bench_checkbox_changed)
+            self.cart_checkboxes[cid] = cb
+            row, col = idx // 2, idx % 2
+            self.test_bench_layout.addWidget(cb, row, col)
+
+        self._updating_checkboxes = False
+        self._apply_test_bench_selection()
+
+    def on_test_bench_checkbox_changed(self, _):
+        """When a checkbox is toggled, update the live view."""
+        if self._updating_checkboxes:
+            return
+        self._apply_test_bench_selection()
+
+    def _apply_test_bench_selection(self):
+        """Collect checked cart IDs and update the track view display."""
+        checked_ids = [cid for cid, cb in self.cart_checkboxes.items() if cb.isChecked()]
+        if checked_ids:
+            self.track_view.set_visible_cart_ids(checked_ids)
+        else:
+            # If none checked, show none (user must select at least one to see carts)
+            self.track_view.set_visible_cart_ids([])
+
+    def select_all_test_bench_carts(self):
+        """Check all cart checkboxes."""
+        self._updating_checkboxes = True
+        for cb in self.cart_checkboxes.values():
+            cb.setChecked(True)
+        self._updating_checkboxes = False
+        self._apply_test_bench_selection()
+
+    def deselect_all_test_bench_carts(self):
+        """Uncheck all cart checkboxes."""
+        self._updating_checkboxes = True
+        for cb in self.cart_checkboxes.values():
+            cb.setChecked(False)
+        self._updating_checkboxes = False
+        self._apply_test_bench_selection()

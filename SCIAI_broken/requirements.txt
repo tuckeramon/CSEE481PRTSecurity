@@ -6,8 +6,8 @@
 altgraph==0.17.4                    # Dependency graph library for PyInstaller
 packaging==25.0                     # Core utilities for Python packages
 pefile==2023.2.7                    # PE file parser for Windows executables
-pyinstaller==6.13.0                 # Package Python apps into standalone executables
-pyinstaller-hooks-contrib==2025.4  # Additional hooks for PyInstaller
+pyinstaller>=6.15.0                # Package Python apps into standalone executables
+pyinstaller-hooks-contrib>=2025.4  # Additional hooks for PyInstaller
 
 # Database connectivity
 PyMySQL==1.1.1                      # Pure Python MySQL client library
