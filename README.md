@@ -22,13 +22,17 @@ Once on the correct page, ensure that "SYSTEM MAINTENENCE MODE" is not highlight
 
 ---
 ## Starting the Dashboard
+
 After you have installed the required packages and checked the HMI, you can start the front-end and back-end simultaneously by using the command:
 
 #### `py sys_run.py`
 
+#### Important Note
+Before starting, make sure that the desktop computer is connected to the wifi network "Evansdale 2050 2"
+
 This will open a window prompting you to enter a username and password. Once you have entered your credentials, the front-end window will appear.
 
-To verify that the back-end has successfully connected, view the output logs in the terminal. More than one reconnect attempt is normal.
+To verify that the back-end has successfully connected, view the output logs in the terminal. More than one reconnect attempt is normal. When the backend is successfully connected, the PowerShell terminal will print "PLC: Connected to 192.168.1.51"
 
 
 ---
@@ -52,5 +56,5 @@ Note: As of the writing of the documentation, the ability to remove a cart from 
 
 After selecting a cart, you may remove it from the test bench by using the drop down selector on the right under "Select Unload Drop-off Area". Once you have selected an area, click the "Remove Active Cart" button to send the instruction.
 
-#### Important Note:
+#### Important Note
 The barcode scanners do not always read the barcode on the top of the carts, even if it looks like it was correctly read from the logging output. If the barcode is successfully read, the scanner should audibly beep once and flash a green light.

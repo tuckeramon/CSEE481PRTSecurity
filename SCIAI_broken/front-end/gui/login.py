@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import (
-    QDialog, QVBoxLayout, QLineEdit, QPushButton, QLabel, QMessageBox
+    QDialog, QVBoxLayout, QLineEdit, QPushButton, QLabel
 )
 import pymysql
 from security import check_password
@@ -11,7 +11,7 @@ class LoginWindow(QDialog):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Login")
-        self.setFixedSize(300, 180)
+        self.setFixedSize(300, 210)
         self.logged_user = None
 
         self.username_input = QLineEdit()
@@ -24,11 +24,16 @@ class LoginWindow(QDialog):
         self.login_btn = QPushButton("Login")
         self.login_btn.clicked.connect(self.attempt_login)
 
+        self.error_label = QLabel("")
+        self.error_label.setStyleSheet("color: red;")
+        self.error_label.setVisible(False)
+
         layout = QVBoxLayout()
         layout.addWidget(QLabel("Username: "))
         layout.addWidget(self.username_input)
         layout.addWidget(QLabel("Password: "))
         layout.addWidget(self.password_input)
+        layout.addWidget(self.error_label)
         layout.addWidget(self.login_btn)
         self.setLayout(layout)
 
@@ -71,6 +76,8 @@ class LoginWindow(QDialog):
                 self.accept()
             else:
                 _log_attempt(username, False)
-                QMessageBox.warning(self, "Login Failed", "Invalid username or password.")
+                self.error_label.setText("Invalid username or password.")
+                self.error_label.setVisible(True)
         except pymysql.MySQLError as e:
-            QMessageBox.critical(self, "Database Error", str(e))
+            self.error_label.setText(f"Database error: {e}")
+            self.error_label.setVisible(True)
