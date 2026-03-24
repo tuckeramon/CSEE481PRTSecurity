@@ -8,6 +8,7 @@ from gui.security_log_view import SecurityLogView
 from models.db import get_connection
 from .add_user import AddUser
 from gui.manage_users_view import ManageUsersView
+from PyQt5.QtWidgets import QApplication
 import sys
 
 class MainWindow(QMainWindow):
@@ -65,6 +66,16 @@ class MainWindow(QMainWindow):
             import traceback
             traceback.print_exc()
             sys.exit(1)
+
+    def closeEvent(self, event):
+        # Stop any running background worker thread so the process can exit cleanly
+        if self.security_view is not None:
+            worker = self.security_view._worker
+            if worker is not None and worker.isRunning():
+                worker.quit()
+                worker.wait()
+        event.accept()
+        QApplication.quit()
 
     def open_add_user(self):
         dialog = AddUser()

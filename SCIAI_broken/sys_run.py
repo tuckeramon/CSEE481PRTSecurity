@@ -9,6 +9,7 @@ back_end = subprocess.Popen([PYTHON, "back-end/main.py"], cwd=os.path.dirname(__
 
 try:
     front_end.wait()
+    back_end.terminate()
     back_end.wait()
 except KeyboardInterrupt:
     print("Shutting down back-end and front-end...")
