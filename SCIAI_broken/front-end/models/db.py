@@ -10,6 +10,7 @@ load_dotenv()
 # Allowed positions (enum values)
 ALLOWED_POSITIONS = {
     'Station_1', 'Station_2', 'Station_3', 'Station_4',
+    'Straight_Through',
     'Segment_A', 'Segment_B', 'Segment_C', 'Segment_D',
     'Segment_E', 'Segment_F',
     # Removal/unload areas (used when removing carts from system)

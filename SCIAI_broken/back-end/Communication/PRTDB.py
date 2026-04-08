@@ -24,6 +24,7 @@ class PRTDB(Database):
     }
 
     DESTINATION_TO_POSITION = {
+        0: "Straight_Through",  # Pass-through (no diversion)
         1: "Station_1",  # Physical destination station 1
         2: "Station_2",  # Physical destination station 2
         3: "Station_3",  # Physical destination station 3
