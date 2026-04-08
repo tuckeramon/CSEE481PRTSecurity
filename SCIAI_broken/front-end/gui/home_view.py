@@ -170,7 +170,7 @@ class HomeView(QWidget):
 
         # Dropdown for stations
         self.station_dropdown = QComboBox()
-        self.station_dropdown.addItems(["","Station 1", "Station 2", "Station 3", "Station 4"])
+        self.station_dropdown.addItems(["","Station 1", "Station 2", "Station 3", "Station 4", "Straight Through"])
         self.station_dropdown.setEnabled(False)
         self.station_dropdown.setStyleSheet(
             """
@@ -408,10 +408,9 @@ class HomeView(QWidget):
         if self.station_dropdown.currentIndex() <= 0:
             return
         cart_id = self.track_view.selected_cart_id
-        station_index = self.station_dropdown.currentIndex()
-        station_id = f"Station_{station_index}"
+        station_id = self.station_dropdown.currentText().replace(" ", "_")
         send_cart_to_station(cart_id, station_id)
-        self.info_label.setText(f"Sent cart {cart_id} to {station_id}.")
+        self.info_label.setText(f"Sent cart {cart_id} to {self.station_dropdown.currentText()}.")
         self.buttons_enabled()
 
     def remove_active_cart_clicked(self):

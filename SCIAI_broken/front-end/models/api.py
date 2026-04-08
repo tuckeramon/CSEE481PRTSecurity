@@ -34,7 +34,8 @@ def send_cart_to_station(cart_id, station_id):
         "Station_1": 1,
         "Station_2": 2,
         "Station_3": 3,
-        "Station_4": 4
+        "Station_4": 4,
+        "Straight_Through": 0
     }
     destination = station_map.get(station_id)
 
