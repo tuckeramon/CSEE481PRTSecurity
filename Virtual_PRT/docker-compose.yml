@@ -1,0 +1,65 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: prt_mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=prt_unified
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql_init:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: prt_backend
+    working_dir: /app/src
+    volumes:
+      - ../SCIAI_broken:/app/src
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - MYSQL_DB=prt_unified
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+    command: python back-end/main.py
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: prt_api
+    working_dir: /app
+    volumes:
+      - ../SCIAI_broken/front-end:/app/src/front-end
+      - ./api_server.py:/app/api_server.py
+      - ./index.html:/app/index.html
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - MYSQL_DB=prt_unified
+      - PYTHONPATH=/app/src/front-end
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    depends_on:
+      - backend
+    command: python /app/api_server.py
+
+volumes:
+  mysql_data:

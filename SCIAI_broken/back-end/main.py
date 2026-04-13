@@ -58,11 +58,13 @@ proxy_firewall = None
 # Database contains both:
 # - PRT tables (PRTSorterRequest, PRTSorterResponse, PRTSorterReport, PRTCarts, PRTRemoveCart)
 # - Frontend tables (users, cart_logs)
+import os
+
 config = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'root',
-    'database': 'prt_unified'  # NEW database - won't affect existing prtdb or prt_system
+    'host': os.getenv('MYSQL_HOST', 'localhost'),
+    'user': os.getenv('MYSQL_USER', 'root'),
+    'password': os.getenv('MYSQL_PASSWORD', 'root'),
+    'database': os.getenv('MYSQL_DB', 'prt_unified')
 }
 prtdb = PRTDB(config)
 

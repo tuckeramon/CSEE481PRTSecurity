@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRT Security Dashboard</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a2e; color: #eee; padding: 20px; }
+        h1 { color: #00d4ff; margin-bottom: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat-card { background: #16213e; padding: 20px; border-radius: 8px; border-left: 4px solid #00d4ff; }
+        .stat-card h3 { font-size: 14px; color: #888; margin-bottom: 5px; }
+        .stat-card .value { font-size: 32px; font-weight: bold; }
+        .critical { border-left-color: #ff4444; }
+        .warning { border-left-color: #ffaa00; }
+        .section { background: #16213e; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .section h2 { color: #00d4ff; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
+        th { color: #888; font-weight: 600; }
+        .status-active { color: #00ff00; }
+        .status-inactive { color: #ff4444; }
+        .btn { background: #00d4ff; color: #000; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background: #00b3dd; }
+        .refresh-btn { float: right; }
+        .error { color: #ff4444; padding: 10px; background: #330000; border-radius: 4px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PRT Security Dashboard <button class="btn refresh-btn" onclick="loadAll()">Refresh</button></h1>
+        
+        <div class="stats" id="stats"></div>
+        
+        <div class="section">
+            <h2>Carts</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Destination</th>
+                        <th>Position</th>
+                        <th>Event</th>
+                        <th>Last Activity</th>
+                    </tr>
+                </thead>
+                <tbody id="carts-table"></tbody>
+            </table>
+        </div>
+        
+        <div class="section">
+            <h2>Activity Logs</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Cart ID</th>
+                        <th>Position</th>
+                        <th>Event</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="logs-table"></tbody>
+            </table>
+        </div>
+        
+        <div class="section">
+            <h2>Security Alerts</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Detected</th>
+                        <th>Severity</th>
+                        <th>Event Type</th>
+                        <th>Message</th>
+                        <th>PLC IP</th>
+                    </tr>
+                </thead>
+                <tbody id="alerts-table"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+        
+        async function fetchJSON(url) {
+            try {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('Network error');
+                return await res.json();
+            } catch (e) {
+                console.error('Fetch error:', e);
+                return null;
+            }
+        }
+        
+        async function loadStats() {
+            const stats = await fetchJSON(`${API_URL}/api/security/summary`);
+            const container = document.getElementById('stats');
+            if (!stats) {
+                container.innerHTML = '<div class="error">Failed to load stats</div>';
+                return;
+            }
+            container.innerHTML = `
+                <div class="stat-card">
+                    <h3>Total Events (24h)</h3>
+                    <div class="value">${stats.total_events_24h || 0}</div>
+                </div>
+                <div class="stat-card critical">
+                    <h3>Critical</h3>
+                    <div class="value">${stats.critical_count || 0}</div>
+                </div>
+                <div class="stat-card warning">
+                    <h3>Warnings</h3>
+                    <div class="value">${stats.warning_count || 0}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Unacknowledged Alerts</h3>
+                    <div class="value">${stats.unacknowledged_alerts || 0}</div>
+                </div>
+            `;
+        }
+        
+        async function loadCarts() {
+            const carts = await fetchJSON(`${API_URL}/api/carts`);
+            const tbody = document.getElementById('carts-table');
+            if (!carts || carts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">No carts found</td></tr>';
+                return;
+            }
+            tbody.innerHTML = carts.map(cart => `
+                <tr>
+                    <td>${cart.cart_id}</td>
+                    <td>Station ${cart.destination}</td>
+                    <td>${cart.position || 'N/A'}</td>
+                    <td>${cart.event || 'Idle'}</td>
+                    <td>${cart.time_stamp || 'Never'}</td>
+                </tr>
+            `).join('');
+        }
+        
+        async function loadLogs() {
+            const logs = await fetchJSON(`${API_URL}/api/logs`);
+            const tbody = document.getElementById('logs-table');
+            if (!logs || logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">No logs found</td></tr>';
+                return;
+            }
+            tbody.innerHTML = logs.slice(0, 20).map(log => `
+                <tr>
+                    <td>${new Date(log.time_stamp).toLocaleString()}</td>
+                    <td>${log.cart_id}</td>
+                    <td>${log.position}</td>
+                    <td>${log.event}</td>
+                    <td>${log.action_type || '-'}</td>
+                </tr>
+            `).join('');
+        }
+        
+        async function loadAlerts() {
+            const alerts = await fetchJSON(`${API_URL}/api/security/alerts`);
+            const tbody = document.getElementById('alerts-table');
+            if (!alerts || alerts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">No alerts</td></tr>';
+                return;
+            }
+            tbody.innerHTML = alerts.slice(0, 20).map(alert => `
+                <tr>
+                    <td>${new Date(alert.detected_at).toLocaleString()}</td>
+                    <td style="color: ${alert.severity === 'CRITICAL' ? '#ff4444' : '#ffaa00'}">${alert.severity}</td>
+                    <td>${alert.event_type || '-'}</td>
+                    <td>${alert.rule_description}</td>
+                    <td>${alert.plc_ip || '-'}</td>
+                </tr>
+            `).join('');
+        }
+        
+        async function loadAll() {
+            await Promise.all([loadStats(), loadCarts(), loadLogs(), loadAlerts()]);
+        }
+        
+        loadAll();
+        setInterval(loadAll, 10000);
+    </script>
+</body>
+</html>
