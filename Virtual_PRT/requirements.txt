@@ -1,0 +1,39 @@
+# Python Dependencies for PRT Industrial Logging System
+# This file was recreated to fix encoding corruption issues
+# Install with: pip install -r requirements.txt
+
+# Application packaging and building
+altgraph==0.17.4                    # Dependency graph library for PyInstaller
+packaging==25.0                     # Core utilities for Python packages
+pefile==2023.2.7                    # PE file parser for Windows executables
+pyinstaller>=6.15.0                # Package Python apps into standalone executables
+pyinstaller-hooks-contrib>=2025.4  # Additional hooks for PyInstaller
+
+# Database connectivity
+PyMySQL==1.1.1                      # Pure Python MySQL client library
+mysql-connector-python==9.3.0       # Official MySQL connector for Python
+
+# GUI framework (Qt)
+PyQt5==5.15.11                      # Python bindings for Qt5 GUI framework
+PyQt5-Qt5==5.15.2                   # Qt5 runtime libraries
+PyQt5_sip==12.17.0                  # SIP bindings generator for PyQt5
+
+# Web server and API
+flask==3.1.1                        # Lightweight web framework for backend server
+requests==2.32.4                    # HTTP library for making API requests
+
+# Security and encryption
+bcrypt==4.3.0                       # Password hashing for user authentication
+cryptography==42.0.7                # Cryptographic primitives and recipes
+
+# PLC communication
+pycomm3==1.2.14                     # Allen-Bradley PLC communication library (EtherNet/IP)
+
+# Data processing and utilities
+pandas==2.3.0                       # Data analysis and CSV handling
+joblib==1.5.1                       # Lightweight pipelining and parallel processing
+
+# Configuration and environment
+python-dotenv==1.1.0                # Load environment variables from .env files
+pywin32-ctypes==0.2.3               # Windows-specific functionality
+setuptools==80.7.1                  # Package development and distribution
