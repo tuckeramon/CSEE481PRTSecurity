@@ -1,5 +1,7 @@
 import os
-from pathlib import Path
+import socket
+import subprocess
+import time
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -10,15 +12,17 @@ SSH_USER = os.getenv("SSH_USER", "pi")
 LOCAL_BIND_PORT = int(os.getenv("SSH_LOCAL_BIND_PORT", "3307"))
 REMOTE_MYSQL_PORT = int(os.getenv("REMOTE_MYSQL_PORT", "3306"))
 
+_TUNNEL_TIMEOUT = 15  # seconds to wait for port to open
+
 
 class SSHTunnelManager:
     def __init__(self):
-        self._tunnel = None
+        self._proc = None
         self._status_callback = None
         self.local_port = LOCAL_BIND_PORT
 
     def set_callback(self, callback):
-        """Set a status callback: callback(message: str, status: str)."""
+        """callback(message: str, status: str)"""
         self._status_callback = callback
 
     def _emit(self, message, status="CONNECTING"):
@@ -26,93 +30,75 @@ class SSHTunnelManager:
         if self._status_callback:
             self._status_callback(message, status)
 
-    @staticmethod
-    def _load_key(path):
-        """Load a private key using paramiko, skipping unsupported types (e.g. DSA removed in paramiko 3.x)."""
-        import paramiko
-        for key_cls in (paramiko.Ed25519Key, paramiko.RSAKey, paramiko.ECDSAKey):
-            try:
-                return key_cls.from_private_key_file(path)
-            except Exception:
-                continue
-        return None
-
     def start(self):
-        """Open the SSH tunnel. Returns True on success. Blocks until connected."""
-        try:
-            from sshtunnel import SSHTunnelForwarder, BaseSSHTunnelForwarderError
-        except ImportError:
-            self._emit("sshtunnel not installed — run: pip install sshtunnel paramiko", "FAILED")
-            return False
-
+        """Start the SSH tunnel via the system ssh binary. Returns True on success."""
         self._emit(f"Connecting to {SSH_USER}@{SSH_HOST}:{SSH_PORT} ...")
 
-        candidates = [
-            Path.home() / ".ssh" / "id_rsa",
-            Path.home() / ".ssh" / "id_ed25519",
-            Path.home() / ".ssh" / "id_ecdsa",
-            Path.home() / ".ssh" / "id_dsa",
+        cmd = [
+            "ssh",
+            "-N",
+            "-L", f"{LOCAL_BIND_PORT}:127.0.0.1:{REMOTE_MYSQL_PORT}",
+            "-o", "BatchMode=yes",
+            "-o", "StrictHostKeyChecking=accept-new",
+            "-o", f"ConnectTimeout=10",
+            "-p", str(SSH_PORT),
+            f"{SSH_USER}@{SSH_HOST}",
         ]
-        ssh_key = next((str(p) for p in candidates if p.exists()), None)
-
-        if ssh_key:
-            self._emit(f"Using key: {Path(ssh_key).name}")
-        else:
-            self._emit("No key found in ~/.ssh/ — trying SSH agent", "WARNING")
-
-        # Load the key object directly to avoid sshtunnel calling paramiko.DSSKey
-        # (removed in paramiko 3.x), which causes an AttributeError.
-        pkey_obj = None
-        if ssh_key:
-            pkey_obj = self._load_key(ssh_key)
-            if pkey_obj is None:
-                self._emit("Could not parse key — check key format", "WARNING")
+        self._emit(f"ssh -N -L {LOCAL_BIND_PORT}:127.0.0.1:{REMOTE_MYSQL_PORT} {SSH_USER}@{SSH_HOST}")
 
         try:
-            kwargs = dict(
-                ssh_address_or_host=(SSH_HOST, SSH_PORT),
-                ssh_username=SSH_USER,
-                remote_bind_address=("127.0.0.1", REMOTE_MYSQL_PORT),
-                local_bind_address=("127.0.0.1", LOCAL_BIND_PORT),
+            self._proc = subprocess.Popen(
+                cmd,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
             )
-            if pkey_obj is not None:
-                kwargs["ssh_pkey"] = pkey_obj
-
-            self._emit("Opening tunnel ...")
-            self._tunnel = SSHTunnelForwarder(**kwargs)
-            self._tunnel.start()
-            self.local_port = self._tunnel.local_bind_port
-
-            # Let db.py pick up the tunneled port automatically
-            os.environ["MYSQL_HOST"] = "127.0.0.1"
-            os.environ["MYSQL_PORT"] = str(self.local_port)
-
-            self._emit(
-                f"Tunnel active  127.0.0.1:{self.local_port} → {SSH_HOST}:{REMOTE_MYSQL_PORT}",
-                "CONNECTED",
-            )
-            return True
-
-        except BaseSSHTunnelForwarderError as exc:
-            self._emit(f"Tunnel failed: {exc}", "FAILED")
-            self._tunnel = None
+        except FileNotFoundError:
+            self._emit("'ssh' not found — install OpenSSH for Windows", "FAILED")
             return False
-        except Exception as exc:
-            self._emit(f"Unexpected error: {exc}", "FAILED")
-            self._tunnel = None
+
+        # Poll the local port until SSH binds it (tunnel ready) or the process exits
+        self._emit(f"Waiting for local port {LOCAL_BIND_PORT} to open ...")
+        deadline = time.time() + _TUNNEL_TIMEOUT
+        while time.time() < deadline:
+            # Check if ssh exited early (auth failure, host unreachable, etc.)
+            if self._proc.poll() is not None:
+                stderr = self._proc.stderr.read().decode(errors="replace").strip()
+                self._emit(f"SSH process exited: {stderr or 'no error output'}", "FAILED")
+                self._proc = None
+                return False
+
+            try:
+                with socket.create_connection(("127.0.0.1", LOCAL_BIND_PORT), timeout=1):
+                    break
+            except (ConnectionRefusedError, OSError):
+                time.sleep(0.4)
+        else:
+            self._emit(f"Timed out after {_TUNNEL_TIMEOUT}s — host unreachable?", "FAILED")
+            self._proc.terminate()
+            self._proc = None
             return False
+
+        self.local_port = LOCAL_BIND_PORT
+        os.environ["MYSQL_HOST"] = "127.0.0.1"
+        os.environ["MYSQL_PORT"] = str(self.local_port)
+
+        self._emit(
+            f"Tunnel active  127.0.0.1:{self.local_port} → {SSH_HOST}:{REMOTE_MYSQL_PORT}",
+            "CONNECTED",
+        )
+        return True
 
     def stop(self):
-        """Close the SSH tunnel if active."""
-        if self._tunnel is not None:
+        if self._proc is not None:
             try:
-                if self._tunnel.is_active:
-                    self._tunnel.stop()
-                    self._emit("SSH tunnel closed.", "DISCONNECTED")
+                self._proc.terminate()
+                self._proc.wait(timeout=3)
             except Exception:
                 pass
-            self._tunnel = None
+            self._proc = None
+            self._emit("SSH tunnel closed.", "DISCONNECTED")
 
     @property
     def is_active(self):
-        return self._tunnel is not None and self._tunnel.is_active
+        return self._proc is not None and self._proc.poll() is None

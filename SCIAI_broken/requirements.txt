@@ -26,9 +26,7 @@ requests==2.32.4                    # HTTP library for making API requests
 bcrypt==4.3.0                       # Password hashing for user authentication
 cryptography==42.0.7                # Cryptographic primitives and recipes
 
-# SSH tunneling
-paramiko>=3.4.0                     # SSH2 protocol library used by sshtunnel
-sshtunnel>=0.4.0                    # SSH tunnel to forward MySQL port from Raspberry Pi
+# SSH tunneling (uses system OpenSSH binary — no extra Python deps needed)
 
 # PLC communication
 pycomm3==1.2.14                     # Allen-Bradley PLC communication library (EtherNet/IP)
