@@ -26,6 +26,17 @@ class SSHTunnelManager:
         if self._status_callback:
             self._status_callback(message, status)
 
+    @staticmethod
+    def _load_key(path):
+        """Load a private key using paramiko, skipping unsupported types (e.g. DSA removed in paramiko 3.x)."""
+        import paramiko
+        for key_cls in (paramiko.Ed25519Key, paramiko.RSAKey, paramiko.ECDSAKey):
+            try:
+                return key_cls.from_private_key_file(path)
+            except Exception:
+                continue
+        return None
+
     def start(self):
         """Open the SSH tunnel. Returns True on success. Blocks until connected."""
         try:
@@ -49,6 +60,14 @@ class SSHTunnelManager:
         else:
             self._emit("No key found in ~/.ssh/ — trying SSH agent", "WARNING")
 
+        # Load the key object directly to avoid sshtunnel calling paramiko.DSSKey
+        # (removed in paramiko 3.x), which causes an AttributeError.
+        pkey_obj = None
+        if ssh_key:
+            pkey_obj = self._load_key(ssh_key)
+            if pkey_obj is None:
+                self._emit("Could not parse key — check key format", "WARNING")
+
         try:
             kwargs = dict(
                 ssh_address_or_host=(SSH_HOST, SSH_PORT),
@@ -56,8 +75,8 @@ class SSHTunnelManager:
                 remote_bind_address=("127.0.0.1", REMOTE_MYSQL_PORT),
                 local_bind_address=("127.0.0.1", LOCAL_BIND_PORT),
             )
-            if ssh_key:
-                kwargs["ssh_pkey"] = ssh_key
+            if pkey_obj is not None:
+                kwargs["ssh_pkey"] = pkey_obj
 
             self._emit("Opening tunnel ...")
             self._tunnel = SSHTunnelForwarder(**kwargs)
