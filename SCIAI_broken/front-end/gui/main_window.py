@@ -88,8 +88,7 @@ class MainWindow(QMainWindow):
             self._ssh_status_label.setText("SSH: not configured")
             self._ssh_status_label.setStyleSheet("color: #aaaacc; font-size: 11px; padding: 0 8px;")
         elif self._tunnel_manager.is_active:
-            port = self._tunnel_manager.local_port
-            self._ssh_status_label.setText(f"SSH: connected  (:{port} → 192.168.1.222)")
+            self._ssh_status_label.setText(f"SSH: connected  (192.168.1.222)")
             self._ssh_status_label.setStyleSheet("color: #44ff88; font-size: 11px; padding: 0 8px;")
         else:
             self._ssh_status_label.setText("SSH: disconnected")
