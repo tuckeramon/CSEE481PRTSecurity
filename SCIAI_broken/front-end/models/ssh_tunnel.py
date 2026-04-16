@@ -8,7 +8,7 @@ load_dotenv()
 
 SSH_HOST = os.getenv("SSH_HOST", "192.168.1.222")
 SSH_PORT = int(os.getenv("SSH_PORT", "22"))
-SSH_USER = os.getenv("SSH_USER", "pi")
+SSH_USER = os.getenv("SSH_USER", "edadmin")
 LOCAL_BIND_PORT = int(os.getenv("SSH_LOCAL_BIND_PORT", "3307"))
 REMOTE_MYSQL_PORT = int(os.getenv("REMOTE_MYSQL_PORT", "3306"))
 
