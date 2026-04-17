@@ -10,6 +10,7 @@ from gui.security_log_view import SecurityLogView
 from models.db import get_connection
 from .add_user import AddUser
 from gui.manage_users_view import ManageUsersView
+from gui.demonstration_view import DemonstrationView
 from PyQt5.QtWidgets import QApplication
 import sys
 
@@ -32,6 +33,7 @@ class MainWindow(QMainWindow):
             self.home_view = HomeView()
             self.activity_view = ActivityLogView(self.db_conn)
             self.security_view = SecurityLogView(self.user) if role in ("admin", "operator") else None
+            self.demonstration_view = DemonstrationView(self.user) if role in ("admin", "operator") else None
             self.manage_users_view = ManageUsersView() if role == "admin" else None
 
             # Page stack
@@ -40,6 +42,8 @@ class MainWindow(QMainWindow):
             self.stack.addWidget(self.activity_view)
             if self.security_view:
                 self.stack.addWidget(self.security_view)
+            if self.demonstration_view:
+                self.stack.addWidget(self.demonstration_view)
             if self.manage_users_view:
                 self.stack.addWidget(self.manage_users_view)
 
@@ -48,6 +52,8 @@ class MainWindow(QMainWindow):
             self.navbar.activity_btn.clicked.connect(lambda: [self.stack.setCurrentIndex(1), self.navbar.set_activity_active()])
             if self.navbar.security_btn and self.security_view:
                 self.navbar.security_btn.clicked.connect(lambda: [self.stack.setCurrentWidget(self.security_view), self.navbar.set_security_active()])
+            if self.navbar.demonstration_btn and self.demonstration_view:
+                self.navbar.demonstration_btn.clicked.connect(lambda: [self.stack.setCurrentWidget(self.demonstration_view), self.navbar.set_demonstration_active()])
             if self.navbar.manage_users_btn and self.manage_users_view:
                 self.navbar.manage_users_btn.clicked.connect(lambda: [self.stack.setCurrentWidget(self.manage_users_view), self.navbar.set_manage_users_active()])
 

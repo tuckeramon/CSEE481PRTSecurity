@@ -56,6 +56,14 @@ class NavBar(QWidget):
         else:
             self.security_btn = None
 
+        if user["role"] in ("admin", "operator"):
+            self.demonstration_btn = QPushButton("Demonstration")
+            self.demonstration_btn.setCursor(Qt.PointingHandCursor)
+            self.demonstration_btn.setCheckable(True)
+            layout.addWidget(self.demonstration_btn)
+        else:
+            self.demonstration_btn = None
+
         # Add admin-only button
         if user["role"] == "admin":
             self.manage_users_btn = QPushButton("Manage Users")
@@ -119,35 +127,38 @@ class NavBar(QWidget):
         self.activity_btn.clicked.connect(self.set_activity_active)
         if self.security_btn:
             self.security_btn.clicked.connect(self.set_security_active)
+        if self.demonstration_btn:
+            self.demonstration_btn.clicked.connect(self.set_demonstration_active)
+
+    def _uncheck_all(self):
+        self.dashboard_btn.setChecked(False)
+        self.activity_btn.setChecked(False)
+        if self.security_btn:
+            self.security_btn.setChecked(False)
+        if self.demonstration_btn:
+            self.demonstration_btn.setChecked(False)
+        if self.manage_users_btn:
+            self.manage_users_btn.setChecked(False)
 
     def set_dashboard_active(self):
+        self._uncheck_all()
         self.dashboard_btn.setChecked(True)
-        self.activity_btn.setChecked(False)
-        if self.security_btn:
-            self.security_btn.setChecked(False)
-        if self.manage_users_btn:
-            self.manage_users_btn.setChecked(False)
 
     def set_activity_active(self):
-        self.dashboard_btn.setChecked(False)
+        self._uncheck_all()
         self.activity_btn.setChecked(True)
-        if self.security_btn:
-            self.security_btn.setChecked(False)
-        if self.manage_users_btn:
-            self.manage_users_btn.setChecked(False)
 
     def set_security_active(self):
-        self.dashboard_btn.setChecked(False)
-        self.activity_btn.setChecked(False)
+        self._uncheck_all()
         if self.security_btn:
             self.security_btn.setChecked(True)
-        if self.manage_users_btn:
-            self.manage_users_btn.setChecked(False)
+
+    def set_demonstration_active(self):
+        self._uncheck_all()
+        if self.demonstration_btn:
+            self.demonstration_btn.setChecked(True)
 
     def set_manage_users_active(self):
+        self._uncheck_all()
         if self.manage_users_btn:
-            self.dashboard_btn.setChecked(False)
-            self.activity_btn.setChecked(False)
-            if self.security_btn:
-                self.security_btn.setChecked(False)
             self.manage_users_btn.setChecked(True)
