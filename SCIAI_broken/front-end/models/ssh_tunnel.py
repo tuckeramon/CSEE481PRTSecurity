@@ -9,7 +9,6 @@ load_dotenv()
 SSH_HOST = os.getenv("SSH_HOST", "192.168.1.222")
 SSH_PORT = int(os.getenv("SSH_PORT", "22"))
 SSH_USER = os.getenv("SSH_USER", "edadmin")
-SSH_SUDO_PASSWORD = os.getenv("SSH_SUDO_PASSWORD", "")
 
 _CONNECT_TIMEOUT = 15  # seconds to wait for SSH to become reachable
 
@@ -102,14 +101,11 @@ class SSHTunnelManager:
         """Run a command on the Pi over a new SSH connection.
 
         Returns (stdout, stderr, returncode).  Blocks until the command exits.
-        Pass sudo=True to prepend ``sudo -S`` and feed the password via stdin.
+        Pass sudo=True to prepend ``sudo`` — requires NOPASSWD in sudoers for
+        the relevant commands so no password prompt is issued.
         """
-        if sudo:
-            full_cmd = f"sudo -S {remote_cmd}"
-            stdin_data = f"{SSH_SUDO_PASSWORD}\n".encode()
-        else:
-            full_cmd = remote_cmd
-            stdin_data = None
+        full_cmd = f"sudo {remote_cmd}" if sudo else remote_cmd
+        stdin_data = None
 
         ssh_cmd = [
             "ssh",
