@@ -168,7 +168,7 @@ class DemonstrationView(QWidget):
         self._set_buttons_enabled(False)
         self._status_label.setText("Running snmpwalk…")
         self._run_async(
-            "snmpwalk -v2c -c public 192.168.1.2",
+            "snmpwalk -v2c -c public 192.168.1.51",
             sudo=False,
             callback=self._on_snmpwalk_done,
         )
