@@ -9,6 +9,7 @@ load_dotenv()
 SSH_HOST = os.getenv("SSH_HOST", "192.168.1.222")
 SSH_PORT = int(os.getenv("SSH_PORT", "22"))
 SSH_USER = os.getenv("SSH_USER", "edadmin")
+SSH_SUDO_PASSWORD = os.getenv("SSH_SUDO_PASSWORD", "")
 
 _CONNECT_TIMEOUT = 15  # seconds to wait for SSH to become reachable
 
@@ -96,6 +97,46 @@ class SSHTunnelManager:
                 pass
             self._proc = None
             self._emit("SSH connection closed.", "DISCONNECTED")
+
+    def run_command(self, remote_cmd, sudo=False):
+        """Run a command on the Pi over a new SSH connection.
+
+        Returns (stdout, stderr, returncode).  Blocks until the command exits.
+        Pass sudo=True to prepend ``sudo -S`` and feed the password via stdin.
+        """
+        if sudo:
+            full_cmd = f"sudo -S {remote_cmd}"
+            stdin_data = f"{SSH_SUDO_PASSWORD}\n".encode()
+        else:
+            full_cmd = remote_cmd
+            stdin_data = None
+
+        ssh_cmd = [
+            "ssh",
+            "-o", "BatchMode=yes",
+            "-o", "StrictHostKeyChecking=accept-new",
+            "-o", "ConnectTimeout=10",
+            "-p", str(SSH_PORT),
+            f"{SSH_USER}@{SSH_HOST}",
+            full_cmd,
+        ]
+
+        try:
+            result = subprocess.run(
+                ssh_cmd,
+                input=stdin_data,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=60,
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+            )
+            stdout = result.stdout.decode(errors="replace").strip()
+            stderr = result.stderr.decode(errors="replace").strip()
+            return stdout, stderr, result.returncode
+        except subprocess.TimeoutExpired:
+            return "", "Command timed out after 60 s", 1
+        except Exception as exc:
+            return "", str(exc), 1
 
     @property
     def is_active(self):

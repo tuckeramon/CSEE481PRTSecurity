@@ -33,7 +33,7 @@ class MainWindow(QMainWindow):
             self.home_view = HomeView()
             self.activity_view = ActivityLogView(self.db_conn)
             self.security_view = SecurityLogView(self.user) if role in ("admin", "operator") else None
-            self.demonstration_view = DemonstrationView(self.user) if role in ("admin", "operator") else None
+            self.demonstration_view = DemonstrationView(tunnel_manager=tunnel_manager, user=self.user) if role in ("admin", "operator") else None
             self.manage_users_view = ManageUsersView() if role == "admin" else None
 
             # Page stack
@@ -101,6 +101,9 @@ class MainWindow(QMainWindow):
             self._ssh_status_label.setStyleSheet("color: #ff6666; font-size: 11px; padding: 0 8px;")
 
     def closeEvent(self, event):
+        # Re-enable firewall if it was disabled during the session
+        if self.demonstration_view is not None:
+            self.demonstration_view.ensure_firewall_enabled()
         # Stop any running background worker thread so the process can exit cleanly
         if self.security_view is not None:
             worker = self.security_view._worker
