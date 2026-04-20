@@ -134,6 +134,20 @@ class SSHTunnelManager:
         except Exception as exc:
             return "", str(exc), 1
 
+    def start_background_command(self, remote_cmd):
+        """Launch a long-running command in the background on the Pi.
+
+        Uses nohup so the process survives the SSH session ending.
+        remote_cmd must include 'sudo' if elevated privileges are needed.
+        Returns True if the command was issued without error.
+        """
+        _, _, rc = self.run_command(f"nohup {remote_cmd} > /dev/null 2>&1 &")
+        return rc == 0
+
+    def stop_background_command(self, process_name):
+        """Send SIGINT to all remote processes matching process_name."""
+        self.run_command(f"sudo pkill -2 {process_name}")
+
     @property
     def is_active(self):
         return self._proc is not None and self._proc.poll() is None

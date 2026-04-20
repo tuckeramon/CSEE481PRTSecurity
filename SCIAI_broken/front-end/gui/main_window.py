@@ -101,8 +101,9 @@ class MainWindow(QMainWindow):
             self._ssh_status_label.setStyleSheet("color: #ff6666; font-size: 11px; padding: 0 8px;")
 
     def closeEvent(self, event):
-        # Re-enable firewall if it was disabled during the session
+        # Restore safe state before closing
         if self.demonstration_view is not None:
+            self.demonstration_view.ensure_dos_stopped()
             self.demonstration_view.ensure_firewall_enabled()
         # Stop any running background worker thread so the process can exit cleanly
         if self.security_view is not None:
