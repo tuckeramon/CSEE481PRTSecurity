@@ -145,8 +145,8 @@ class SSHTunnelManager:
         return rc == 0
 
     def stop_background_command(self, process_name):
-        """Send SIGINT to all remote processes matching process_name."""
-        self.run_command(f"sudo pkill -2 {process_name}")
+        """Kill all remote processes matching process_name with SIGKILL."""
+        self.run_command(f"sudo pkill -9 {process_name}")
 
     @property
     def is_active(self):
