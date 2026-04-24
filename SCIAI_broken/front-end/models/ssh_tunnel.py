@@ -134,14 +134,14 @@ class SSHTunnelManager:
         except Exception as exc:
             return "", str(exc), 1
 
-    def start_background_command(self, remote_cmd):
-        """Launch a long-running command in the background on the Pi.
+    def start_background_command(self, shell_cmd):
+        """Run a shell command on the Pi that manages its own backgrounding.
 
-        Uses nohup so the process survives the SSH session ending.
-        remote_cmd must include 'sudo' if elevated privileges are needed.
+        The caller is responsible for including nohup, output redirection, and
+        the trailing & so the SSH session exits immediately.
         Returns True if the command was issued without error.
         """
-        _, _, rc = self.run_command(f"nohup {remote_cmd} > /dev/null 2>&1 &")
+        _, _, rc = self.run_command(shell_cmd)
         return rc == 0
 
     def stop_background_command(self, process_name):

