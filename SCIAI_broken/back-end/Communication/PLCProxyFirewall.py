@@ -45,8 +45,8 @@ class PLCProxyFirewall:
     """
 
     BUFFER_SIZE = 4096
-    RELAY_TIMEOUT = 30.0
-    SELECT_TIMEOUT = 1.0
+    RELAY_TIMEOUT = 30.0  # Idle relay sockets are terminated after 30s
+    SELECT_TIMEOUT = 1.0  # select() poll interval
 
     def __init__(self, prtdb, plc_target_ip, proxy_port_map, proxy_bind_ip='0.0.0.0', whitelist_ips=None):
         """

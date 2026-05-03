@@ -33,9 +33,9 @@ class SSHTunnelManager:
 
         cmd = [
             "ssh",
-            "-N",
-            "-o", "BatchMode=yes",
-            "-o", "StrictHostKeyChecking=accept-new",
+            "-N",                                       # No remote command
+            "-o", "BatchMode=yes",                      # Never prompt for a password, the workstation's ssh key is recognized by the Pi
+            "-o", "StrictHostKeyChecking=accept-new",   # Auto-accept new keys but reject changed ones
             "-o", "ConnectTimeout=10",
             "-o", "ServerAliveInterval=30",
             "-o", "ServerAliveCountMax=3",
@@ -48,7 +48,7 @@ class SSHTunnelManager:
                 cmd,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.PIPE,
-                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,  # Suppress console window on Windows
             )
         except FileNotFoundError:
             self._emit("'ssh' not found — install OpenSSH for Windows", "FAILED")

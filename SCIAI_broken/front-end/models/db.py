@@ -17,6 +17,7 @@ ALLOWED_POSITIONS = {
     'Remove_Area_5', 'Remove_Area_6', 'Remove_Area_7',
     'Remove_Area_8', 'Remove_Area_9'
 }
+# Keys are 4-bit binary strings encoding PLC report flags in order: (active, lost, good, diverted)
 EVENT_MAP = {
     "0000": "Not Diverted",
     "0010": "Lost",
@@ -46,7 +47,7 @@ def get_connection():
             user=config["user"],
             password=config["password"],
             database=config["database"],
-            connect_timeout=5,
+            connect_timeout=5,  # Short timeout so a down DB fails fast instead of freezing the UI
             cursorclass=pymysql.cursors.DictCursor
         )
         #print("✅ MySQL connection established.")
@@ -60,6 +61,7 @@ def get_connection():
 
 # Log a cart event with validation
 def log_event(cart_id, position, event, action_type=None):
+    # Validate before writing to DB
     if position not in ALLOWED_POSITIONS:
         raise ValueError(f"Invalid position: {position}")
 

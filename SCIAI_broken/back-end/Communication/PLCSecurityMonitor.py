@@ -55,7 +55,9 @@ class PLCSecurityMonitor:
         self.prtdb = prtdb
         self.driver: Optional[LogixDriver] = None
 
-        # Cached state for change detection
+        # In-memory state for between-poll change detection.
+        # PLCBaseline stores the expected mode
+        # Creates a local state to detect state transitions
         self._last_mode = None
         self._last_fault_count = 0
         self._last_info = None
@@ -202,8 +204,8 @@ class PLCSecurityMonitor:
             return None
 
         try:
-            # Try to read controller mode - tag name varies by PLC configuration
-            # Common tag names for controller mode:
+            # Probe until correct tag name is found
+            # Tag names are not standard amongst firmware versions
             mode_tags = [
                 "Controller:Mode",      # Standard Logix tag
                 "Mode",                 # Simplified

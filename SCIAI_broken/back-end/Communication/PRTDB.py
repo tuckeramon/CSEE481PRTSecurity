@@ -110,6 +110,8 @@ class PRTDB(Database):
         INSERT INTO PRTSorterRequest (sorterID, transactionID, barcode)
         VALUES (%s, %s, %s)
         """
+        # PLC sends barcodes as integers (e.g., "1")
+        # Padded with 0s to match DB/frontend format
         args = [(sorter, transaction_id, str(barcode).zfill(4))]
         result = self.insert(query, args)
 
@@ -175,6 +177,8 @@ class PRTDB(Database):
         INSERT INTO PRTSorterReport (sorterID, barcode, active, lost, good, diverted)
         VALUES (%s, %s, %s, %s, %s, %s)
         """
+        # MySQL TINYINT columns require Python int
+        # booleans must be converted
         args = [(sorter, barcode, int(active), int(lost), int(good), int(diverted))]
         result = self.insert(query, args)
 

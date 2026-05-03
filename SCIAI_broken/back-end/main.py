@@ -74,7 +74,7 @@ def get_destination(barcode: str, sorter_num: int):
     result = prtdb.get_destination_info(barcode)  # Stations 1-4
     if result is None:
         print(f"GET_DEST: barcode {barcode} not found in PRTCarts, defaulting to straight-through")
-        return 0
+        return 0  # 0 = straight-through (cart is not sorted into a station)
     physical_dest = result['destination']
     if physical_dest == 0:
         return 0
@@ -89,6 +89,8 @@ def process_barcode(barcode: str):
     for ch in barcode:
         if ch < '0' or ch > '9':
             return "0000"
+    # Valid cart barcodes are 0001–0010
+    # All other barcodes belong to the Smart Manufacturing System (robotic arm)
     if int(barcode) < 1 or int(barcode) > 10:
         return "0000"
     return barcode

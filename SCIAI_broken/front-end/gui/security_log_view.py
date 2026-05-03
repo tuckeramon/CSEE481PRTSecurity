@@ -291,7 +291,7 @@ class SecurityLogView(QWidget):
         self.time_filter.setDateTime(QDateTime.currentDateTime().addDays(-1))
         filter_layout.addWidget(self.time_filter)
 
-        self.time_filter_dirty = False
+        self.time_filter_dirty = False  # Only apply the time filter when the user has explicitly changed it
         self.time_filter.dateTimeChanged.connect(self._on_time_filter_changed)
 
         # Buttons
@@ -349,7 +349,7 @@ class SecurityLogView(QWidget):
     def load_all_data(self):
         """Kick off a background thread to fetch all data."""
         if self._loading:
-            return  # Skip if a load is already in progress
+            return  # Auto-refresh fires every 10 s
 
         self._loading = True
         filters = self._get_current_filters()
@@ -361,7 +361,7 @@ class SecurityLogView(QWidget):
         """Called on main thread when the worker finishes."""
         self._loading = False
 
-        # Populate PLC IP dropdown on first successful load
+        # Populate PLC IP dropdown one time
         if not self._plc_ips_loaded:
             self._plc_ips_loaded = True
             for ip in result.get("plc_ips", []):
@@ -372,7 +372,7 @@ class SecurityLogView(QWidget):
         for key, label in self.stat_labels.items():
             label.setText(str(stats.get(key, 0)))
 
-        # Update tables with repainting suspended
+        # Suspend Qt repaints during row population to avoid excessive redraws
         self.alerts_table.setUpdatesEnabled(False)
         self._populate_alerts_table(result.get("alerts", []))
         self.alerts_table.setUpdatesEnabled(True)

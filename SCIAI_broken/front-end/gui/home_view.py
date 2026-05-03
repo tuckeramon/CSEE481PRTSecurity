@@ -323,7 +323,8 @@ class HomeView(QWidget):
         panel_layout.addWidget(self.test_bench_container)
 
         self.cart_checkboxes = {}  # cart_id -> QCheckBox
-        self._updating_checkboxes = False  # prevent recursive updates
+        # Guard flag
+        self._updating_checkboxes = False
 
         test_bench_buttons = QHBoxLayout()
         self.select_all_btn = QPushButton("Select All")
@@ -436,6 +437,7 @@ class HomeView(QWidget):
 
     def sync_cart_dropdown_to_selection(self, cart_id):
         """When user clicks a dot on the map, update the dropdown to match."""
+        # blockSignals prevents currentIndexChanged from firing and triggering a second display_cart_info call
         self.cart_dropdown.blockSignals(True)
         idx = self.cart_dropdown.findText(cart_id)
         if idx >= 0:

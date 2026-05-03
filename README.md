@@ -52,9 +52,7 @@ After selecting a cart, you may send it to one of the stations by using the drop
 
 ### Removing a cart from the test bench
 
-Note: As of the writing of the documentation, the ability to remove a cart from a station has not yet been implemented. Therefore, this section should be updated and this text removed in accordance with future implementations.
-
-After selecting a cart, you may remove it from the test bench by using the drop down selector on the right under "Select Unload Drop-off Area". Once you have selected an area, click the "Remove Active Cart" button to send the instruction.
+This feature is only applicable to the Smart Manufacturing project, and should not be used in the operation of the PRT Test Bench.
 
 #### Important Note
 The barcode scanners do not always read the barcode on the top of the carts, even if it looks like it was correctly read from the logging output. If the barcode is successfully read, the scanner should audibly beep once and flash a green light.
